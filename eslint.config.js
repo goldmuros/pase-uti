@@ -19,5 +19,32 @@ export default tseslint.config([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      "simple-import-sort/imports": [
+      "error",
+      {
+        "groups": [
+          [
+            "./SetPublicPath",
+            // Side effect imports
+            "^\\u0000",
+            // `react`-> `@sage`packages ->`carbon-react`->`RTL`, then other packages in alphabetical order
+            "^react",
+            "^@testing-library",
+            "^@",
+            "^[a-z]",
+            // Imports starting with `../`
+            "^\\.\\.(?!/?$)",
+            "^\\.\\./?$",
+            // Imports starting with `./`
+            "^\\./(?=.*/)(?!/?$)",
+            "^\\.(?!/?$)",
+            "^\\./?$"
+          ]
+        ]
+      }
+    ],
+}
+    }
   },
 ])
