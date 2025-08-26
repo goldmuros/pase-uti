@@ -1,9 +1,10 @@
-import { type ReactNode } from "react";
 import { Box, Stack } from "@mui/material";
-import SideMenu from "./components/SideMenu";
+import { type ReactNode } from "react";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import Header from "./components/Header";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Paciente from "./pages/Paciente";
+import SideMenu from "./components/SideMenu";
+import DetallePaciente from "./pages/DetallePaciente";
+import ListaPacientes from "./pages/ListaPacientes";
 import Medico from "./pages/Medico";
 import Pase from "./pages/Pase";
 
@@ -41,9 +42,10 @@ const App = (): ReactNode => {
 						<Header />
 						<Routes>
 							<Route path="/" element={<Home />} />
-							<Route path="/paciente" element={<Paciente />} />
+							<Route path="/pacientes" element={<ListaPacientes />} />
 							<Route path="/medico" element={<Medico />} />
 							<Route path="/pase" element={<Pase />} />
+							<Route path="/paciente/:id" element={<DetallePaciente />} />
 						</Routes>
 					</Stack>
 				</Box>
