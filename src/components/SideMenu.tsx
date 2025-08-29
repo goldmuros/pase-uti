@@ -3,6 +3,7 @@ import MuiDrawer, { drawerClasses } from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
 import MenuContent from "./MenuContent";
+import Divider from "@mui/material/Divider";
 
 const drawerWidth = 240;
 
@@ -37,6 +38,7 @@ const SideMenu = (): ReactNode => {
 				}}
 			>
 				<MenuContent />
+				<Divider />
 			</Box>
 		</Drawer>
 	);
