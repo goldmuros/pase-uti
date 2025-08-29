@@ -1,0 +1,28 @@
+export const pases = [
+  {
+    id: "pase1",
+    antecedentes: "Hipertensión arterial, Diabetes mellitus tipo 2",
+    gcs_rass: "GCS: 14/15, RASS: -1",
+    atb: "Vancomicina 1g c/12h",
+    vc_cook: "Ventilación mecánica, PEEP 8cmH2O",
+    actualmente: "Paciente estable, mejorando parámetros respiratorios",
+    pendientes: "Control de cultivos, evaluación neurológica",
+    pacienteId: "1",
+    principal: "Neumonía nosocomial",
+    antibioticos: "Vancomicina, Piperacilina-tazobactam",
+    fechaCreacion: "2025-08-13:14:55:00",
+  },
+  {
+    id: "pase2",
+    antecedentes: "Hipertensión arterial, Diabetes mellitus tipo 2",
+    gcs_rass: "GCS: 15/15, RASS: 0",
+    atb: "Meropenem 1g c/8h",
+    vc_cook: "Respiración espontánea con soporte",
+    actualmente: "Evolución favorable, disminución de soporte respiratorio",
+    pendientes: "Preparación para traslado a sala general",
+    pacienteId: "1",
+    principal: "Neumonía en resolución",
+    antibioticos: "Meropenem",
+    fechaCreacion: "2025-08-14:02:55:00",
+  },
+];
