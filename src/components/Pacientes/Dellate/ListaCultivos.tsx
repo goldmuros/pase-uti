@@ -3,6 +3,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   Science as ScienceIcon,
 } from "@mui/icons-material";
+import { useMediaQuery, useTheme } from "@mui/material";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -30,6 +31,9 @@ const ListaCultivos: React.FC<ListaCultivosProps> = ({
   expandedCultivo,
   onCultivoChange,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const formatearFecha = useCallback((fecha: Date) => {
     return fecha.toLocaleDateString("es-ES", {
       year: "numeric",
@@ -46,11 +50,15 @@ const ListaCultivos: React.FC<ListaCultivosProps> = ({
 
   return (
     <Card>
-      <CardContent>
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
         <Typography
-          variant="h6"
+          variant={isMobile ? "h6" : "h5"}
           gutterBottom
-          sx={{ color: "primary.main", mb: 3 }}
+          sx={{
+            color: "primary.main",
+            mb: 3,
+            fontSize: { xs: "1.1rem", sm: "1.25rem" },
+          }}
         >
           <ScienceIcon sx={{ mr: 1, verticalAlign: "middle" }} />
           Cultivos
@@ -82,32 +90,47 @@ const ListaCultivos: React.FC<ListaCultivosProps> = ({
                   sx={{
                     backgroundColor: "grey.50",
                     "&:hover": { backgroundColor: "grey.100" },
+                    py: { xs: 1.5, sm: 2 },
+                    px: { xs: 2, sm: 3 },
                   }}
                 >
                   <Box
                     sx={{
                       display: "flex",
                       flexGrow: 1,
-                      alignItems: "center",
                       justifyContent: "space-between",
+                      flexDirection: { xs: "column", sm: "row" },
+                      alignItems: { xs: "flex-start", sm: "center" },
+                      gap: { xs: 1, sm: 0 },
                     }}
                   >
-                    <Box>
+                    <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                       <Typography
-                        variant="subtitle1"
-                        sx={{ fontWeight: "bold" }}
+                        variant={isMobile ? "body1" : "subtitle1"}
+                        sx={{
+                          fontWeight: "bold",
+                          fontSize: { xs: "0.95rem", sm: "1rem" },
+                        }}
                       >
                         {cultivo.nombre}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}
+                      >
                         Solicitado: {formatearFecha(cultivo.fechaSolicitud)}
                       </Typography>
                     </Box>
                     <Chip
                       label={estado.label}
                       color={estado.color}
-                      size="small"
-                      sx={{ mr: 2 }}
+                      size={isMobile ? "small" : "small"}
+                      sx={{
+                        mt: { xs: 0.5, sm: 0 },
+                        mr: { xs: 0, sm: 2 },
+                        fontSize: { xs: "0.7rem", sm: "0.75rem" },
+                      }}
                     />
                   </Box>
                 </AccordionSummary>

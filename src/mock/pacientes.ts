@@ -1,6 +1,6 @@
 import type { Paciente } from "../types/Paciente";
 
-export const pacientes: Paciente[] = [
+export const mockPacientes: Paciente[] = [
   {
     id: "1",
     nombre: "María Elena",

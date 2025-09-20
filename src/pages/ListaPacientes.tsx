@@ -1,25 +1,120 @@
 import {
+  Add as AddIcon,
+  Assignment as AssignmentIcon,
   Bed as BedIcon,
   LocalHospital as HospitalIcon,
   Person as PersonIcon,
+  Science as ScienceIcon,
+  Warning as WarningIcon,
 } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   Button,
   Card,
   CardActions,
   CardHeader,
   Chip,
+  Container,
+  Fab,
+  Grid,
+  Paper,
+  Skeleton,
+  Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { pacientes as pacientesIniciales } from "../mock/pacientes";
+import type { Paciente } from "../types/Paciente";
 
-const ListaPacientesMejorada = () => {
+// Mock data (esto vendría de tu archivo de mock)
+const mockPacientes: Paciente[] = [
+  {
+    id: "1",
+    nombre: "Juan Carlos",
+    apellido: "Pérez García",
+    cama: "101",
+    fechaIngreso: "2025-08-28",
+    activo: true,
+  },
+  {
+    id: "2",
+    nombre: "María Elena",
+    apellido: "Rodríguez López",
+    cama: "102",
+    fechaIngreso: "2025-08-27",
+    activo: true,
+  },
+  {
+    id: "3",
+    nombre: "Carlos Alberto",
+    apellido: "Martínez Silva",
+    cama: "103",
+    fechaIngreso: "2025-08-25",
+    activo: false,
+  },
+];
+
+// Tipos para el estado del componente
+interface ListaPacientesState {
+  pacientes: Paciente[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+// Hook personalizado para obtener datos de pacientes
+const usePacientesData = () => {
+  const [state, setState] = useState<ListaPacientesState>({
+    pacientes: [],
+    isLoading: true,
+    error: null,
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+      try {
+        // Simular delay de API
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Ordenar pacientes por fecha de ingreso (más recientes primero)
+        const pacientesOrdenados = mockPacientes.sort(
+          (a, b) =>
+            new Date(b.fechaIngreso).getTime() -
+            new Date(a.fechaIngreso).getTime()
+        );
+
+        setState({
+          pacientes: pacientesOrdenados,
+          isLoading: false,
+          error: null,
+        });
+      } catch (error) {
+        setState(prev => ({
+          ...prev,
+          isLoading: false,
+          error: "Error al cargar los pacientes",
+        }));
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  return state;
+};
+
+// Componente principal
+const ListaPacientes: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
-  const [pacientes, setPacientes] = useState(pacientesIniciales);
+  const { pacientes, isLoading, error } = usePacientesData();
 
   const irDetallePaciente = (pacienteId: string) => {
     navigate(`/pacientes/${pacienteId}`);
@@ -29,103 +124,468 @@ const ListaPacientesMejorada = () => {
     navigate(`/pases/${pacienteId}?cama=${cama}`);
   };
 
+  const agregarCultivos = (pacienteId: string, cama: string) => {
+    navigate(`/pacientes/cultivos/${pacienteId}?cama=${cama}`);
+  };
+
+  const agregarNuevoPaciente = () => {
+    navigate("/pacientes/nuevo");
+  };
+
+  const formatFecha = (fecha: string) => {
+    return new Date(fecha).toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  // Estados de carga
+  if (isLoading) {
+    return (
+      <Container maxWidth="xl" sx={{ px: { xs: 0.5, sm: 1, md: 2, lg: 3 } }}>
+        <Skeleton variant="text" height={60} sx={{ mb: 2 }} />
+        <Grid container spacing={{ xs: 1, sm: 2, md: 3 }}>
+          {Array.from({ length: 6 }, (_, index) => (
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <Skeleton
+                variant="rectangular"
+                height={200}
+                sx={{ borderRadius: 2 }}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container
+        maxWidth="xl"
+        sx={{ px: { xs: 0.5, sm: 1, md: 2, lg: 3 }, textAlign: "center" }}
+      >
+        <Alert severity="error" sx={{ mb: 2 }}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            <WarningIcon sx={{ mr: 1, verticalAlign: "middle" }} />
+            {error}
+          </Typography>
+          <Typography variant="body2">
+            No se pudieron cargar los pacientes.
+          </Typography>
+        </Alert>
+      </Container>
+    );
+  }
+
+  const pacientesActivos = pacientes.filter(p => p.activo);
+  const pacientesInactivos = pacientes.filter(p => !p.activo);
+
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
-      <Box sx={{ mb: 3 }}>
+    <Container
+      maxWidth="xl"
+      sx={{
+        px: { xs: 0.5, sm: 1, md: 2, lg: 3 },
+        position: "relative",
+        width: "100%",
+        maxWidth: "100% !important",
+      }}
+    >
+      {/* Header - Responsive */}
+      <Box
+        sx={{
+          mb: { xs: 2, sm: 3, md: 4 },
+          display: "flex",
+          alignItems: "center",
+          flexDirection: { xs: "column", sm: "row" },
+          textAlign: { xs: "center", sm: "left" },
+        }}
+      >
         <Typography
-          variant="h4"
-          sx={{ mb: 2, fontWeight: "bold", color: "primary.main" }}
+          variant={isMobile ? "h5" : "h4"}
+          sx={{
+            fontWeight: "bold",
+            color: "primary.main",
+            flexGrow: 1,
+            fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
+            mb: { xs: 1, sm: 0 },
+          }}
         >
           <HospitalIcon sx={{ mr: 1, verticalAlign: "middle" }} />
           Gestión de Pacientes
         </Typography>
       </Box>
 
-      {/* Lista de pacientes */}
-      <Box
-        sx={{
-          display: "grid",
-          gap: 3,
-          gridTemplateColumns: {
-            xs: "1fr",
-            sm: "repeat(auto-fill, minmax(400px, 1fr))",
-            md: "repeat(auto-fill, minmax(450px, 1fr))",
-          },
-          mb: 4,
-        }}
+      {/* Estadísticas rápidas - Responsive */}
+      <Grid
+        container
+        spacing={{ xs: 1, sm: 2 }}
+        sx={{ mb: { xs: 2, sm: 3, md: 4 } }}
       >
-        {pacientes.map(paciente => (
-          <Card
-            key={paciente.id}
-            elevation={2}
+        <Grid item xs={12} sm={4}>
+          <Paper
             sx={{
-              cursor: "pointer",
-              opacity: paciente.activo ? 1 : 0.7,
-              border: paciente.activo
-                ? "2px solid transparent"
-                : "2px dashed #ccc",
-              "&:hover": {
-                boxShadow: 4,
-                transform: "translateY(-2px)",
-                transition: "all 0.2s ease-in-out",
-              },
+              p: { xs: 1.5, sm: 2 },
+              textAlign: "center",
+              backgroundColor: "primary.main",
+              color: "white",
+              borderRadius: 2,
             }}
-            onClick={() => irDetallePaciente(paciente.id)}
           >
-            <CardHeader
-              avatar={
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <PersonIcon
-                    color={paciente.activo ? "primary" : "disabled"}
-                  />
-                </Box>
-              }
-              title={
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                    <BedIcon fontSize="small" />
-                    Cama: {paciente.cama}
-                  </Typography>
-                  <Chip
-                    size="small"
-                    label={paciente.activo ? "Activo" : "Inactivo"}
-                    color={paciente.activo ? "success" : "default"}
-                    variant={paciente.activo ? "filled" : "outlined"}
-                  />
-                </Box>
-              }
-              subheader={
-                <Box>
-                  <Typography
-                    variant="body2"
-                    sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                  >
-                    {paciente.nombre} {paciente.apellido}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Ingreso: {paciente.fechaIngreso}
-                  </Typography>
-                </Box>
-              }
-            />
-            <CardActions>
-              <Button
-                size="small"
-                color="primary"
-                onClick={event => {
-                  event.stopPropagation();
+            <Typography
+              variant={isMobile ? "h5" : "h4"}
+              sx={{ fontWeight: "bold" }}
+            >
+              {pacientesActivos.length}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+            >
+              Pacientes Activos
+            </Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Paper
+            sx={{
+              p: { xs: 1.5, sm: 2 },
+              textAlign: "center",
+              backgroundColor: "text.secondary",
+              color: "white",
+              borderRadius: 2,
+            }}
+          >
+            <Typography
+              variant={isMobile ? "h5" : "h4"}
+              sx={{ fontWeight: "bold" }}
+            >
+              {pacientesInactivos.length}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+            >
+              Pacientes Inactivos
+            </Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Paper
+            sx={{
+              p: { xs: 1.5, sm: 2 },
+              textAlign: "center",
+              backgroundColor: "success.main",
+              color: "white",
+              borderRadius: 2,
+            }}
+          >
+            <Typography
+              variant={isMobile ? "h5" : "h4"}
+              sx={{ fontWeight: "bold" }}
+            >
+              {pacientes.length}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+            >
+              Total de Pacientes
+            </Typography>
+          </Paper>
+        </Grid>
+      </Grid>
 
-                  agregarPase(paciente.id, paciente.cama);
+      {pacientes.length === 0 ? (
+        <Paper sx={{ p: { xs: 3, sm: 4 }, textAlign: "center" }}>
+          <PersonIcon
+            sx={{
+              fontSize: { xs: 48, sm: 64 },
+              color: "text.secondary",
+              mb: 2,
+            }}
+          />
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No hay pacientes registrados
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Comience agregando un nuevo paciente al sistema.
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={agregarNuevoPaciente}
+            sx={{ borderRadius: 2 }}
+            size={isMobile ? "medium" : "large"}
+          >
+            Agregar Primer Paciente
+          </Button>
+        </Paper>
+      ) : (
+        <>
+          {/* Pacientes Activos */}
+          {pacientesActivos.length > 0 && (
+            <>
+              <Typography
+                variant={isMobile ? "h6" : "h5"}
+                sx={{
+                  mb: { xs: 2, sm: 3 },
+                  fontWeight: "bold",
+                  color: "primary.main",
+                  fontSize: { xs: "1.25rem", sm: "1.5rem" },
                 }}
               >
-                Agregar pase
-              </Button>
-            </CardActions>
-          </Card>
-        ))}
-      </Box>
-    </Box>
+                Pacientes Activos ({pacientesActivos.length})
+              </Typography>
+              <Grid
+                container
+                spacing={{ xs: 2, sm: 3 }}
+                sx={{ mb: { xs: 3, sm: 4 } }}
+              >
+                {pacientesActivos.map(paciente => (
+                  <Grid item xs={12} sm={6} lg={4} key={paciente.id}>
+                    <Card
+                      elevation={2}
+                      sx={{
+                        cursor: "pointer",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        borderRadius: 2,
+                        "&:hover": {
+                          boxShadow: 4,
+                          transform: "translateY(-2px)",
+                          transition: "all 0.2s ease-in-out",
+                        },
+                      }}
+                      onClick={() => irDetallePaciente(paciente.id)}
+                    >
+                      <CardHeader
+                        avatar={
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <PersonIcon color="primary" />
+                          </Box>
+                        }
+                        title={
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <Typography
+                              variant={isMobile ? "body1" : "h6"}
+                              sx={{ fontWeight: "bold" }}
+                            >
+                              <BedIcon fontSize="small" sx={{ mr: 1 }} />
+                              Cama: {paciente.cama}
+                            </Typography>
+                            <Chip
+                              size="small"
+                              label="Activo"
+                              color="success"
+                              variant="filled"
+                            />
+                          </Box>
+                        }
+                        subheader={
+                          <Box>
+                            <Typography
+                              variant="body1"
+                              sx={{
+                                fontWeight: "medium",
+                                mb: 0.5,
+                                fontSize: { xs: "0.875rem", sm: "1rem" },
+                              }}
+                            >
+                              {paciente.nombre} {paciente.apellido}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{
+                                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                              }}
+                            >
+                              Ingreso: {formatFecha(paciente.fechaIngreso)}
+                            </Typography>
+                          </Box>
+                        }
+                        sx={{ flexGrow: 1, pb: 1 }}
+                      />
+                      <CardActions
+                        sx={{
+                          justifyContent: "space-between",
+                          px: 2,
+                          pb: 2,
+                          flexDirection: { xs: "column", sm: "row" },
+                          gap: { xs: 1, sm: 0 },
+                        }}
+                      >
+                        <Button
+                          size="small"
+                          color="primary"
+                          startIcon={<AssignmentIcon />}
+                          onClick={event => {
+                            event.stopPropagation();
+                            agregarPase(paciente.id, paciente.cama);
+                          }}
+                          sx={{
+                            borderRadius: 2,
+                            width: { xs: "100%", sm: "auto" },
+                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                          }}
+                        >
+                          Agregar Pase
+                        </Button>
+                        <Button
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                          startIcon={<ScienceIcon />}
+                          onClick={event => {
+                            event.stopPropagation();
+                            agregarCultivos(paciente.id, paciente.cama);
+                          }}
+                          sx={{
+                            borderRadius: 2,
+                            width: { xs: "100%", sm: "auto" },
+                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                          }}
+                        >
+                          Cultivos
+                        </Button>
+                      </CardActions>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </>
+          )}
+
+          {/* Pacientes Inactivos */}
+          {pacientesInactivos.length > 0 && (
+            <>
+              <Typography
+                variant={isMobile ? "h6" : "h5"}
+                sx={{
+                  mb: { xs: 2, sm: 3 },
+                  fontWeight: "bold",
+                  color: "text.secondary",
+                  fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                }}
+              >
+                Pacientes Inactivos ({pacientesInactivos.length})
+              </Typography>
+              <Grid container spacing={{ xs: 2, sm: 3 }}>
+                {pacientesInactivos.map(paciente => (
+                  <Grid item xs={12} sm={6} lg={4} key={paciente.id}>
+                    <Card
+                      elevation={1}
+                      sx={{
+                        cursor: "pointer",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        borderRadius: 2,
+                        opacity: 0.7,
+                        border: "2px dashed #ccc",
+                        "&:hover": {
+                          opacity: 0.9,
+                          boxShadow: 2,
+                        },
+                      }}
+                      onClick={() => irDetallePaciente(paciente.id)}
+                    >
+                      <CardHeader
+                        avatar={
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <PersonIcon color="disabled" />
+                          </Box>
+                        }
+                        title={
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <Typography
+                              variant={isMobile ? "body1" : "h6"}
+                              color="text.secondary"
+                            >
+                              <BedIcon fontSize="small" sx={{ mr: 1 }} />
+                              Cama: {paciente.cama}
+                            </Typography>
+                            <Chip
+                              size="small"
+                              label="Inactivo"
+                              color="default"
+                              variant="outlined"
+                            />
+                          </Box>
+                        }
+                        subheader={
+                          <Box>
+                            <Typography
+                              variant="body1"
+                              color="text.secondary"
+                              sx={{
+                                mb: 0.5,
+                                fontSize: { xs: "0.875rem", sm: "1rem" },
+                              }}
+                            >
+                              {paciente.nombre} {paciente.apellido}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color="text.disabled"
+                              sx={{
+                                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                              }}
+                            >
+                              Ingreso: {formatFecha(paciente.fechaIngreso)}
+                            </Typography>
+                          </Box>
+                        }
+                        sx={{ flexGrow: 1 }}
+                      />
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </>
+          )}
+        </>
+      )}
+
+      {/* Botón flotante para agregar paciente - Responsive */}
+      <Tooltip title="Agregar nuevo paciente">
+        <Fab
+          color="primary"
+          aria-label="add"
+          onClick={agregarNuevoPaciente}
+          sx={{
+            position: "fixed",
+            bottom: { xs: 16, sm: 24 },
+            right: { xs: 16, sm: 24 },
+            boxShadow: 4,
+            width: { xs: 48, sm: 56 },
+            height: { xs: 48, sm: 56 },
+            zIndex: theme.zIndex.speedDial,
+          }}
+          size={isMobile ? "medium" : "large"}
+        >
+          <AddIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+        </Fab>
+      </Tooltip>
+    </Container>
   );
 };
 
-export default ListaPacientesMejorada;
+export default ListaPacientes;

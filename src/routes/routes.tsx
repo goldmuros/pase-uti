@@ -1,3 +1,4 @@
+import ListaCultivos from "@/pages/ListaCultivos";
 import DetallePaciente from "../pages/DetallePaciente";
 import ErrorBoundary from "../pages/ErrorBoundary";
 import Home from "../pages/Home";
@@ -18,6 +19,10 @@ const routes = [
         element: <Home />,
       },
       {
+        path: "medico",
+        element: <Medico />,
+      },
+      {
         path: "pacientes",
         children: [
           {
@@ -28,11 +33,20 @@ const routes = [
             path: ":id", // Esto crea la ruta /pacientes/:id
             element: <DetallePaciente />,
           },
+          {
+            path: "cultivos/:id",
+            element: <ListaCultivos />,
+          },
         ],
       },
       {
-        path: "medico",
-        element: <Medico />,
+        path: "cultivos",
+        children: [
+          {
+            index: true,
+            element: <ListaCultivos />,
+          },
+        ],
       },
       {
         path: "pases",

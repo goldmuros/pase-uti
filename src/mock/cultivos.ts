@@ -1,4 +1,4 @@
-export const cultivos = [
+export const mockCultivos = [
   {
     id: "cult1",
     fechaSolicitud: new Date("2024-03-15"),

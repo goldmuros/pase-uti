@@ -1,5 +1,336 @@
-const ListaPases = () => {
-  return <>Lista Pases</>;
+import CardPase from "@/components/Pases/CardPase";
+import { mockPacientes } from "@/mock/pacientes";
+import { mockPases } from "@/mock/pases";
+import {
+  ArrowBack as ArrowBackIcon,
+  Assignment as AssignmentIcon,
+  Warning as WarningIcon,
+} from "@mui/icons-material";
+import {
+  Alert,
+  Box,
+  Container,
+  Grid,
+  IconButton,
+  Paper,
+  Skeleton,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import type { Paciente } from "../types/Paciente";
+import type { Pase } from "../types/Pase";
+
+// Interface para pases agrupados por paciente
+export interface PasesPorPaciente {
+  paciente: Paciente;
+  pases: Pase[];
+  ultimoPase: Pase;
+  pasesAnteriores: Pase[];
+}
+
+// Tipos para el estado del componente
+interface ListaPasesState {
+  pasesPorPaciente: PasesPorPaciente[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+// Hook personalizado para obtener pases agrupados por paciente
+const usePasesAgrupadosData = () => {
+  const [state, setState] = useState<ListaPasesState>({
+    pasesPorPaciente: [],
+    isLoading: true,
+    error: null,
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+      try {
+        // Simular delay de API
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Agrupar pases por paciente
+        const pasesAgrupados: { [pacienteId: string]: Pase[] } = {};
+
+        mockPases.forEach((pase: Pase) => {
+          if (!pasesAgrupados[pase.pacienteId]) {
+            pasesAgrupados[pase.pacienteId] = [];
+          }
+          pasesAgrupados[pase.pacienteId].push(pase);
+        });
+
+        // Crear estructura final con información del paciente
+        const pasesPorPaciente: PasesPorPaciente[] = Object.entries(
+          pasesAgrupados
+        )
+          .map(([pacienteId, pases]) => {
+            const paciente = mockPacientes.find(p => p.id === pacienteId);
+            if (!paciente) return null;
+
+            // Ordenar pases por fecha descendente
+            const pasesOrdenados = pases.sort(
+              (a, b) =>
+                new Date(b.fechaCreacion).getTime() -
+                new Date(a.fechaCreacion).getTime()
+            );
+
+            return {
+              paciente,
+              pases: pasesOrdenados,
+              ultimoPase: pasesOrdenados[0],
+              pasesAnteriores: pasesOrdenados.slice(1),
+            };
+          })
+          .filter(Boolean) as PasesPorPaciente[];
+
+        // Ordenar por fecha del último pase (más reciente primero)
+        const pasesPorPacienteOrdenados = pasesPorPaciente.sort(
+          (a, b) =>
+            new Date(b.ultimoPase.fechaCreacion).getTime() -
+            new Date(a.ultimoPase.fechaCreacion).getTime()
+        );
+
+        setState({
+          pasesPorPaciente: pasesPorPacienteOrdenados,
+          isLoading: false,
+          error: null,
+        });
+      } catch (error) {
+        setState(prev => ({
+          ...prev,
+          isLoading: false,
+          error: "Error al cargar los pases médicos",
+        }));
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  return state;
+};
+
+// Componente principal
+const ListaPases: React.FC = () => {
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+
+  const { pasesPorPaciente, isLoading, error } = usePasesAgrupadosData();
+
+  // const cultivos = mockCultivos.filter(
+  //   cultivo => cultivo.pacienteId === pacienteId
+  // );
+
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
+  // Estados de carga
+  if (isLoading) {
+    return (
+      <Container maxWidth="xl" sx={{ px: { xs: 0.5, sm: 1, md: 2, lg: 3 } }}>
+        <Skeleton variant="text" height={60} sx={{ mb: 2 }} />
+        <Grid container spacing={{ xs: 2, sm: 3 }}>
+          {Array.from({ length: 3 }, (_, index) => (
+            <Grid sx={{ xs: 12 }} key={index}>
+              <Skeleton
+                variant="rectangular"
+                height={200}
+                sx={{ mb: 2, borderRadius: 2 }}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container
+        maxWidth="xl"
+        sx={{ px: { xs: 0.5, sm: 1, md: 2, lg: 3 }, textAlign: "center" }}
+      >
+        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            <WarningIcon sx={{ mr: 1, verticalAlign: "middle" }} />
+            {error}
+          </Typography>
+          <Typography variant="body2">
+            No se pudieron cargar los pases médicos.
+          </Typography>
+        </Alert>
+        <IconButton onClick={handleGoBack} color="primary" size="large">
+          <ArrowBackIcon />
+        </IconButton>
+      </Container>
+    );
+  }
+
+  const totalPases = pasesPorPaciente.reduce(
+    (sum, item) => sum + item.pases.length,
+    0
+  );
+
+  return (
+    <Container
+      maxWidth="xl"
+      sx={{
+        px: { xs: 0.5, sm: 1, md: 2, lg: 3 },
+        position: "relative",
+        width: "100%",
+        maxWidth: "100% !important",
+      }}
+    >
+      {/* Header con botón de regreso - Responsive */}
+      <Box
+        sx={{
+          mb: { xs: 2, sm: 3, md: 4 },
+          display: "flex",
+          alignItems: "center",
+          flexDirection: { xs: "column", sm: "row" },
+          textAlign: { xs: "center", sm: "left" },
+        }}
+      >
+        <Tooltip title="Volver atrás">
+          <IconButton
+            onClick={handleGoBack}
+            sx={{ mr: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+        </Tooltip>
+        <Typography
+          variant={isMobile ? "h5" : "h4"}
+          sx={{
+            fontWeight: "bold",
+            color: "primary.main",
+            flexGrow: 1,
+            fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
+          }}
+        >
+          <AssignmentIcon sx={{ mr: 1, verticalAlign: "middle" }} />
+          Pases Médicos por Paciente
+        </Typography>
+      </Box>
+
+      {/* Estadísticas - Responsive */}
+      <Grid
+        container
+        spacing={{ xs: 1, sm: 2 }}
+        sx={{ mb: { xs: 2, sm: 3, md: 4 } }}
+      >
+        <Grid sx={{ xs: 12, sm: 4 }}>
+          <Paper
+            sx={{
+              p: { xs: 1.5, sm: 2 },
+              textAlign: "center",
+              backgroundColor: "primary.main",
+              color: "white",
+              borderRadius: 2,
+            }}
+          >
+            <Typography
+              variant={isMobile ? "h5" : "h4"}
+              sx={{ fontWeight: "bold" }}
+            >
+              {pasesPorPaciente.length}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+            >
+              Pacientes con Pases
+            </Typography>
+          </Paper>
+        </Grid>
+        <Grid sx={{ xs: 12, sm: 4 }}>
+          <Paper
+            sx={{
+              p: { xs: 1.5, sm: 2 },
+              textAlign: "center",
+              backgroundColor: "success.main",
+              color: "white",
+              borderRadius: 2,
+            }}
+          >
+            <Typography
+              variant={isMobile ? "h5" : "h4"}
+              sx={{ fontWeight: "bold" }}
+            >
+              {totalPases}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+            >
+              Total de Pases
+            </Typography>
+          </Paper>
+        </Grid>
+        <Grid sx={{ xs: 12, sm: 4 }}>
+          <Paper
+            sx={{
+              p: { xs: 1.5, sm: 2 },
+              textAlign: "center",
+              backgroundColor: "secondary.main",
+              color: "white",
+              borderRadius: 2,
+            }}
+          >
+            <Typography
+              variant={isMobile ? "h5" : "h4"}
+              sx={{ fontWeight: "bold" }}
+            >
+              {Math.round((totalPases / pasesPorPaciente.length) * 10) / 10}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+            >
+              Promedio por Paciente
+            </Typography>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {pasesPorPaciente.length === 0 ? (
+        <Paper
+          sx={{ p: { xs: 3, sm: 4 }, textAlign: "center", borderRadius: 2 }}
+        >
+          <AssignmentIcon
+            sx={{
+              fontSize: { xs: 48, sm: 64 },
+              color: "text.secondary",
+              mb: 2,
+            }}
+          />
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No hay pases médicos registrados
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            No se encontraron pases médicos en el sistema.
+          </Typography>
+        </Paper>
+      ) : (
+        <Grid container spacing={{ xs: 2, sm: 3 }}>
+          {pasesPorPaciente.map(item => (
+            <Grid sx={{ xs: 12 }} key={item.paciente.id}>
+              <CardPase pasePaciente={item} />
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    </Container>
+  );
 };
 
 export default ListaPases;

@@ -3,6 +3,7 @@ import {
   Assignment as AssignmentIcon,
   ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
+import { useMediaQuery, useTheme } from "@mui/material";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -31,13 +32,19 @@ const ListaPases: React.FC<ListaPasesProps> = ({
   onPaseChange,
   pases,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   return (
     <Card>
-      <CardContent>
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
         <Typography
-          variant="h6"
+          variant={isMobile ? "h6" : "h5"}
           gutterBottom
-          sx={{ color: "primary.main", mb: 3 }}
+          sx={{
+            color: "primary.main",
+            mb: 3,
+            fontSize: { xs: "1.1rem", sm: "1.25rem" },
+          }}
         >
           <AssignmentIcon sx={{ mr: 1, verticalAlign: "middle" }} />
           Pases Médicos
@@ -70,29 +77,54 @@ const ListaPases: React.FC<ListaPasesProps> = ({
                   "&:hover": {
                     backgroundColor: index === 0 ? "primary.100" : "grey.100",
                   },
+                  py: { xs: 1.5, sm: 2 },
+                  px: { xs: 2, sm: 3 },
                 }}
               >
                 <Box
                   sx={{
                     flexGrow: 1,
                     display: "flex",
-                    alignItems: "center",
                     justifyContent: "space-between",
+                    flexDirection: { xs: "column", sm: "row" },
+                    alignItems: { xs: "flex-start", sm: "center" },
+                    gap: { xs: 1, sm: 0 },
                   }}
                 >
-                  <Box>
-                    <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                      Principal: {pase.principal}
+                  <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: 1,
+                      }}
+                    >
+                      <Typography
+                        variant={isMobile ? "body1" : "subtitle1"}
+                        sx={{
+                          fontWeight: "bold",
+                          fontSize: { xs: "0.95rem", sm: "1rem" },
+                        }}
+                      >
+                        Principal: {pase.principal}
+                      </Typography>
                       {index === 0 && (
                         <Chip
                           color="primary"
-                          size="small"
-                          sx={{ mb: 1, ml: 2 }}
+                          size={isMobile ? "small" : "small"}
+                          sx={{
+                            fontSize: { xs: "0.7rem", sm: "0.75rem" },
+                          }}
                           label="Más reciente"
                         />
                       )}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    </Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}
+                    >
                       Actualmente: {pase.actualmente}
                     </Typography>
                   </Box>
