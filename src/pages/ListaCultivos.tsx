@@ -24,35 +24,8 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { mockCultivos } from "../mock/cultivos";
 import type { Cultivos } from "../types/Cultivos";
-
-// Mock data
-const mockCultivos: Cultivos[] = [
-  {
-    id: "cult1",
-    fechaSolicitud: new Date("2024-03-15"),
-    fechaRecibido: new Date("2024-03-17"),
-    nombre: "Hemocultivo",
-    resultado: "Staphylococcus aureus - Sensible a Vancomicina",
-    pacienteId: "1",
-  },
-  {
-    id: "cult2",
-    fechaSolicitud: new Date("2024-03-16"),
-    fechaRecibido: new Date("2024-03-18"),
-    nombre: "Urocultivo",
-    resultado: "Escherichia coli - Resistente a Ampicilina",
-    pacienteId: "1",
-  },
-  {
-    id: "cult3",
-    fechaSolicitud: new Date("2024-03-18"),
-    fechaRecibido: new Date("2024-03-20"),
-    nombre: "Cultivo de esputo",
-    resultado: "Pseudomonas aeruginosa - Sensible a Meropenem",
-    pacienteId: "1",
-  },
-];
 
 // Tipos para el estado del componente
 interface ListaCultivosState {
@@ -80,8 +53,8 @@ const useCultivosData = () => {
         // Ordenar cultivos por fecha de solicitud (más recientes primero)
         const cultivosOrdenados = mockCultivos.sort(
           (a, b) =>
-            new Date(b.fechaSolicitud).getTime() -
-            new Date(a.fechaSolicitud).getTime()
+            new Date(b.fecha_solicitud).getTime() -
+            new Date(a.fecha_solicitud).getTime()
         );
 
         setState({
@@ -117,17 +90,21 @@ const ListaCultivos: React.FC = () => {
     navigate("/cultivos/nuevo");
   };
 
-  const formatFecha = (fecha: Date) => {
-    return fecha.toLocaleDateString("es-ES", {
+  const formatFecha = (fecha: string) => {
+    return new Date(fecha).toLocaleDateString("es-ES", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
   };
 
-  const getEstadoCultivo = (fechaRecibido: Date) => {
+  const getEstadoCultivo = (fechaRecibido: string | null) => {
+    if (!fechaRecibido)
+      return { label: "Pendiente", color: "warning" as const };
+
     const hoy = new Date();
-    const diffTime = hoy.getTime() - fechaRecibido.getTime();
+    const fechaRecibida = new Date(fechaRecibido);
+    const diffTime = hoy.getTime() - fechaRecibida.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays <= 1) return { label: "Reciente", color: "success" as const };
@@ -142,7 +119,7 @@ const ListaCultivos: React.FC = () => {
         <Skeleton variant="text" height={60} sx={{ mb: 2 }} />
         <Grid container spacing={{ xs: 1, sm: 2, md: 3 }}>
           {Array.from({ length: 6 }, (_, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
+            <Grid sx={{ xs: 12, sm: 6, md: 4 }} key={index}>
               <Skeleton
                 variant="rectangular"
                 height={200}
@@ -215,7 +192,7 @@ const ListaCultivos: React.FC = () => {
         spacing={{ xs: 1, sm: 2 }}
         sx={{ mb: { xs: 2, sm: 3, md: 4 } }}
       >
-        <Grid item xs={12} sm={4}>
+        <Grid sx={{ xs: 12, sm: 4 }}>
           <Paper
             sx={{
               p: { xs: 1.5, sm: 2 },
@@ -239,7 +216,7 @@ const ListaCultivos: React.FC = () => {
             </Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid sx={{ xs: 12, sm: 4 }}>
           <Paper
             sx={{
               p: { xs: 1.5, sm: 2 },
@@ -255,7 +232,7 @@ const ListaCultivos: React.FC = () => {
             >
               {
                 cultivos.filter(
-                  c => getEstadoCultivo(c.fechaRecibido).color === "success"
+                  c => getEstadoCultivo(c.fecha_recibido).color === "success"
                 ).length
               }
             </Typography>
@@ -267,7 +244,7 @@ const ListaCultivos: React.FC = () => {
             </Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid sx={{ xs: 12, sm: 4 }}>
           <Paper
             sx={{
               p: { xs: 1.5, sm: 2 },
@@ -321,9 +298,9 @@ const ListaCultivos: React.FC = () => {
       ) : (
         <Grid container spacing={{ xs: 1, sm: 2, md: 3 }}>
           {cultivos.map(cultivo => {
-            const estado = getEstadoCultivo(cultivo.fechaRecibido);
+            const estado = getEstadoCultivo(cultivo.fecha_recibido);
             return (
-              <Grid item xs={12} sm={6} lg={4} key={cultivo.id}>
+              <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={cultivo.id}>
                 <Card
                   elevation={2}
                   sx={{
@@ -377,7 +354,7 @@ const ListaCultivos: React.FC = () => {
                             fontSize: { xs: "0.75rem", sm: "0.875rem" },
                           }}
                         >
-                          Solicitado: {formatFecha(cultivo.fechaSolicitud)}
+                          Solicitado: {formatFecha(cultivo.fecha_solicitud)}
                         </Typography>
                         <Typography
                           variant="body2"
@@ -386,7 +363,10 @@ const ListaCultivos: React.FC = () => {
                             fontSize: { xs: "0.75rem", sm: "0.875rem" },
                           }}
                         >
-                          Recibido: {formatFecha(cultivo.fechaRecibido)}
+                          Recibido:{" "}
+                          {cultivo.fecha_recibido
+                            ? formatFecha(cultivo.fecha_recibido)
+                            : "Pendiente"}
                         </Typography>
                       </Box>
                     }
@@ -416,16 +396,14 @@ const ListaCultivos: React.FC = () => {
                       size="small"
                       color="primary"
                       variant="outlined"
-                      onClick={() =>
-                        navigate(`/pacientes/${cultivo.pacienteId}`)
-                      }
+                      onClick={() => navigate(`/pases`)}
                       sx={{
                         borderRadius: 2,
                         width: { xs: "100%", sm: "auto" },
                         fontSize: { xs: "0.75rem", sm: "0.875rem" },
                       }}
                     >
-                      Ver Paciente
+                      Ver Pases
                     </Button>
                   </CardActions>
                 </Card>

@@ -93,7 +93,7 @@ const Layout = (): ReactNode => {
         <Box
           sx={{
             flexGrow: 1,
-            overflow: "auto",
+            overflow: "hidden",
             width: "100%",
             maxWidth: "100%",
           }}

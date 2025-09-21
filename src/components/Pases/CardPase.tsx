@@ -69,8 +69,12 @@ const CardPase = ({
     navigate(`/pacientes/${pacienteId}`);
   };
 
+  const handleVerDetallePase = (paseId: string) => {
+    navigate(`/pases/${paseId}`);
+  };
+
   return (
-    <Card sx={{ borderRadius: 2, boxShadow: 2 }}>
+    <Card sx={{ borderRadius: 2, boxShadow: 2, maxWidth: 500 }}>
       {/* Header del paciente */}
       <CardHeader
         avatar={
@@ -123,7 +127,7 @@ const CardPase = ({
                 color="text.secondary"
                 sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
               >
-                Cama: {pasePaciente.paciente.cama}
+                Cama: {pasePaciente.paciente.cama_id || "No asignada"}
               </Typography>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -137,7 +141,7 @@ const CardPase = ({
                 sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
               >
                 Último pase:{" "}
-                {formatFechaCorta(pasePaciente.ultimoPase.fechaCreacion)}
+                {formatFechaCorta(pasePaciente.ultimoPase.fecha_creacion)}
               </Typography>
             </Box>
           </Box>
@@ -164,10 +168,15 @@ const CardPase = ({
             backgroundColor: "primary.main",
             color: "white",
             borderRadius: 2,
+            cursor: "pointer",
+            "&:hover": {
+              opacity: 0.9,
+            },
           }}
+          onClick={() => handleVerDetallePase(pasePaciente.ultimoPase.id)}
         >
           <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
-            Último Pase - {formatFecha(pasePaciente.ultimoPase.fechaCreacion)}
+            Último Pase - {formatFecha(pasePaciente.ultimoPase.fecha_creacion)}
           </Typography>
           <Typography
             variant="subtitle1"
@@ -276,7 +285,7 @@ const CardPase = ({
                         {pase.principal || "Sin diagnóstico principal"}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {formatFecha(pase.fechaCreacion)}
+                        {formatFecha(pase.fecha_creacion)}
                       </Typography>
                     </Box>
 
@@ -306,46 +315,6 @@ const CardPase = ({
                           {pase.pendientes || "No hay pendientes"}
                         </Typography>
                       </Grid>
-
-                      {pase.antibioticos && (
-                        <>
-                          {pase.antibioticos && (
-                            <Grid sx={{ xs: 12, md: 6 }}>
-                              <Typography
-                                variant="subtitle2"
-                                gutterBottom
-                                sx={{ fontWeight: "bold" }}
-                              >
-                                Antibióticos:
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                {pase.antibioticos}
-                              </Typography>
-                            </Grid>
-                          )}
-
-                          {/* {pase.cultivos && (
-                                      <Grid  item xs={12} md={6}>
-                                        <Typography
-                                          variant="subtitle2"
-                                          gutterBottom
-                                          sx={{ fontWeight: "bold" }}
-                                        >
-                                          Cultivos:
-                                        </Typography>
-                                        <Typography
-                                          variant="body2"
-                                          color="text.secondary"
-                                        >
-                                          {pase.cultivos}
-                                        </Typography>
-                                      </Grid>
-                                    )} */}
-                        </>
-                      )}
                     </Grid>
 
                     <Box sx={{ display: "flex", gap: 1, mt: 2 }}>

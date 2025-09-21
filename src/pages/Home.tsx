@@ -15,11 +15,17 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+  const navigate = useNavigate();
+
+  const handleCardClick = (path: string) => {
+    navigate(path);
+  };
 
   const features = [
     {
@@ -31,6 +37,7 @@ const Home = () => {
       title: "Gestión de Pacientes",
       description:
         "Administra la información de pacientes, historiales médicos y seguimientos.",
+      path: "/pacientes",
     },
     {
       icon: (
@@ -41,6 +48,7 @@ const Home = () => {
       title: "Pases Médicos",
       description:
         "Crea y gestiona pases médicos con diagnósticos y tratamientos detallados.",
+      path: "/pases",
     },
     {
       icon: (
@@ -51,6 +59,7 @@ const Home = () => {
       title: "Cultivos y Laboratorios",
       description:
         "Registra y monitorea resultados de cultivos y estudios de laboratorio.",
+      path: "/cultivos",
     },
   ];
 
@@ -105,16 +114,17 @@ const Home = () => {
         </Typography>
       </Box>
 
-      {/* Features Grid */}
       <Grid container spacing={{ xs: 3, sm: 4, md: 5 }}>
         {features.map((feature, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
+          <Grid sx={{ xs: 12, sm: 6, md: 4 }} key={index}>
             <Card
               elevation={2}
+              onClick={() => handleCardClick(feature.path)}
               sx={{
                 height: "100%",
                 borderRadius: 3,
                 transition: "all 0.3s ease-in-out",
+                cursor: "pointer",
                 "&:hover": {
                   transform: "translateY(-4px)",
                   boxShadow: 6,

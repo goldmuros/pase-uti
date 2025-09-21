@@ -27,92 +27,10 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { mockCultivos } from "../mock/cultivos";
-import { mockPacientes } from "../mock/pacientes";
-import { mockPases } from "../mock/pases";
-import type { Cultivos } from "../types/Cultivos";
-import type { Paciente } from "../types/Paciente";
-import type { Pase } from "../types/Pase";
-
-// Tipos para el estado del componente
-interface DetallePacienteState {
-  paciente: Paciente | null;
-  pases: Pase[];
-  cultivos: Cultivos[];
-  isLoading: boolean;
-  error: string | null;
-}
-
-// Hook personalizado para obtener datos del paciente
-const usePacienteData = (id: string) => {
-  const [state, setState] = useState<DetallePacienteState>({
-    paciente: null,
-    pases: [],
-    cultivos: [],
-    isLoading: true,
-    error: null,
-  });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-      try {
-        // Simular delay de API
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        const paciente = mockPacientes.find(p => p.id === id);
-
-        if (!paciente) {
-          setState(prev => ({
-            ...prev,
-            isLoading: false,
-            error: "Paciente no encontrado",
-          }));
-          return;
-        }
-
-        const pasesPaciente = mockPases
-          .filter(pase => pase.pacienteId === id)
-          .sort(
-            (a, b) =>
-              new Date(b.fechaCreacion).getTime() -
-              new Date(a.fechaCreacion).getTime()
-          );
-
-        const cultivosPaciente = mockCultivos
-          .filter(cultivo => cultivo.pacienteId === id)
-          .sort(
-            (a, b) =>
-              new Date(b.fechaRecibido).getTime() -
-              new Date(a.fechaRecibido).getTime()
-          );
-
-        setState({
-          paciente,
-          pases: pasesPaciente,
-          cultivos: cultivosPaciente,
-          isLoading: false,
-          error: null,
-        });
-      } catch (error) {
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: "Error al cargar los datos del paciente",
-        }));
-      }
-    };
-
-    if (id) {
-      fetchData();
-    }
-  }, [id]);
-
-  return state;
-};
+import { usePacienteData } from "../hooks/usePacienteData";
+import { mockCamas } from "../mock/camas";
 
 // Componente principal
 const DetallePaciente: React.FC = () => {
@@ -147,13 +65,15 @@ const DetallePaciente: React.FC = () => {
 
   const agregarPase = () => {
     if (paciente) {
-      navigate(`/pases/${paciente.id}?cama=${paciente.cama}`);
+      navigate(
+        `/pases/nuevo?pacienteId=${paciente.id}&cama=${paciente.cama_id}`
+      );
     }
   };
 
   const agregarCultivos = () => {
     if (paciente) {
-      navigate(`/pacientes/cultivos/${paciente.id}?cama=${paciente.cama}`);
+      navigate(`/cultivos/nuevo?pacienteId=${paciente.id}`);
     }
   };
 
@@ -176,14 +96,14 @@ const DetallePaciente: React.FC = () => {
           sx={{ mb: 3, borderRadius: 2 }}
         />
         <Grid container spacing={{ xs: 2, md: 3 }}>
-          <Grid item xs={12} lg={6}>
+          <Grid sx={{ xs: 12, lg: 6 }}>
             <Skeleton
               variant="rectangular"
               height={300}
               sx={{ borderRadius: 2 }}
             />
           </Grid>
-          <Grid item xs={12} lg={6}>
+          <Grid sx={{ xs: 12, lg: 6 }}>
             <Skeleton
               variant="rectangular"
               height={300}
@@ -286,7 +206,7 @@ const DetallePaciente: React.FC = () => {
       <Card sx={{ mb: { xs: 2, sm: 3, md: 4 }, borderRadius: 2, boxShadow: 2 }}>
         <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Grid container spacing={{ xs: 2, sm: 3 }} alignItems="center">
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
               <Paper
                 sx={{
                   p: 2,
@@ -301,12 +221,21 @@ const DetallePaciente: React.FC = () => {
                   variant={isMobile ? "h6" : "h5"}
                   sx={{ fontWeight: "bold" }}
                 >
-                  Cama {paciente.cama}
+                  {paciente.cama_id
+                    ? (() => {
+                        const cama = mockCamas.find(
+                          c => c.id === paciente.cama_id
+                        );
+                        return cama
+                          ? `Cama ${cama.numero} (${cama.sala})`
+                          : "Cama no asignada";
+                      })()
+                    : "Cama no asignada"}
                 </Typography>
               </Paper>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
               <Box sx={{ textAlign: "center" }}>
                 <CalendarIcon sx={{ color: "text.secondary", mb: 1 }} />
                 <Typography
@@ -321,12 +250,12 @@ const DetallePaciente: React.FC = () => {
                   color="text.secondary"
                   sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
                 >
-                  {formatFecha(paciente.fechaIngreso)}
+                  {formatFecha(paciente.fecha_ingreso)}
                 </Typography>
               </Box>
             </Grid>
 
-            <Grid item xs={6} md={3}>
+            <Grid sx={{ xs: 6, md: 3 }}>
               <Box sx={{ textAlign: "center" }}>
                 <AssignmentIcon sx={{ color: "text.secondary", mb: 1 }} />
                 <Typography
@@ -346,7 +275,7 @@ const DetallePaciente: React.FC = () => {
               </Box>
             </Grid>
 
-            <Grid item xs={6} md={3}>
+            <Grid sx={{ xs: 6, md: 3 }}>
               <Box sx={{ textAlign: "center" }}>
                 <ScienceIcon sx={{ color: "text.secondary", mb: 1 }} />
                 <Typography
@@ -380,7 +309,7 @@ const DetallePaciente: React.FC = () => {
                 Último Pase Médico
               </Typography>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                {formatFecha(ultimoPase.fechaCreacion)}
+                {formatFecha(ultimoPase.fecha_creacion)}
               </Typography>
               <Typography
                 variant="body1"
@@ -395,7 +324,7 @@ const DetallePaciente: React.FC = () => {
 
       {/* Grid con cultivos y pases - Responsive */}
       <Grid container spacing={{ xs: 2, sm: 3 }}>
-        <Grid item xs={12} lg={6}>
+        <Grid sx={{ xs: 12, lg: 6 }}>
           <Paper
             sx={{
               p: { xs: 2, sm: 3 },
@@ -425,7 +354,7 @@ const DetallePaciente: React.FC = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} lg={6}>
+        <Grid sx={{ xs: 12, lg: 6 }}>
           <Paper
             sx={{
               p: { xs: 2, sm: 3 },

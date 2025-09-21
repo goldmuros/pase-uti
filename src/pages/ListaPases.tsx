@@ -9,6 +9,7 @@ import {
 import {
   Alert,
   Box,
+  Button,
   Container,
   Grid,
   IconButton,
@@ -59,10 +60,10 @@ const usePasesAgrupadosData = () => {
         const pasesAgrupados: { [pacienteId: string]: Pase[] } = {};
 
         mockPases.forEach((pase: Pase) => {
-          if (!pasesAgrupados[pase.pacienteId]) {
-            pasesAgrupados[pase.pacienteId] = [];
+          if (!pasesAgrupados[pase.paciente_id]) {
+            pasesAgrupados[pase.paciente_id] = [];
           }
-          pasesAgrupados[pase.pacienteId].push(pase);
+          pasesAgrupados[pase.paciente_id].push(pase);
         });
 
         // Crear estructura final con información del paciente
@@ -76,8 +77,8 @@ const usePasesAgrupadosData = () => {
             // Ordenar pases por fecha descendente
             const pasesOrdenados = pases.sort(
               (a, b) =>
-                new Date(b.fechaCreacion).getTime() -
-                new Date(a.fechaCreacion).getTime()
+                new Date(b.fecha_creacion).getTime() -
+                new Date(a.fecha_creacion).getTime()
             );
 
             return {
@@ -92,8 +93,8 @@ const usePasesAgrupadosData = () => {
         // Ordenar por fecha del último pase (más reciente primero)
         const pasesPorPacienteOrdenados = pasesPorPaciente.sort(
           (a, b) =>
-            new Date(b.ultimoPase.fechaCreacion).getTime() -
-            new Date(a.ultimoPase.fechaCreacion).getTime()
+            new Date(b.ultimoPase.fecha_creacion).getTime() -
+            new Date(a.ultimoPase.fecha_creacion).getTime()
         );
 
         setState({
@@ -220,14 +221,18 @@ const ListaPases: React.FC = () => {
           <AssignmentIcon sx={{ mr: 1, verticalAlign: "middle" }} />
           Pases Médicos por Paciente
         </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate("/pases/nuevo")}
+          sx={{ ml: 2 }}
+        >
+          Nuevo Pase
+        </Button>
       </Box>
 
       {/* Estadísticas - Responsive */}
-      <Grid
-        container
-        spacing={{ xs: 1, sm: 2 }}
-        sx={{ mb: { xs: 2, sm: 3, md: 4 } }}
-      >
+      <Grid container spacing={{ xs: 1, sm: 2 }}>
         <Grid sx={{ xs: 12, sm: 4 }}>
           <Paper
             sx={{
@@ -323,7 +328,7 @@ const ListaPases: React.FC = () => {
       ) : (
         <Grid container spacing={{ xs: 2, sm: 3 }}>
           {pasesPorPaciente.map(item => (
-            <Grid sx={{ xs: 12 }} key={item.paciente.id}>
+            <Grid sx={{ xs: 12, sm: 6, md: 6 }} key={item.paciente.id}>
               <CardPase pasePaciente={item} />
             </Grid>
           ))}

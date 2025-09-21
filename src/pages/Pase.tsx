@@ -23,6 +23,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { mockPases } from "../mock/pases";
 
 const defaultData = {
   id: "",
@@ -41,7 +42,7 @@ const defaultData = {
 
 const Pase = () => {
   const navigate = useNavigate();
-  const { pacienteId } = useParams();
+  const { id } = useParams(); // id is pase id
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
@@ -49,10 +50,11 @@ const Pase = () => {
   const [formData, setFormData] = useState(defaultData);
   const [submitMessage, setSubmitMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const urlParams = new URLSearchParams(window.location.search);
   const paciente = {
-    id: pacienteId || urlParams.get("pacienteId") || "",
+    id: urlParams.get("pacienteId") || "",
     cama: urlParams.get("cama") || "",
   };
 
@@ -76,13 +78,36 @@ const Pase = () => {
 
   // Inicializar formulario
   useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      id: generateId(),
-      pacienteId: paciente.id,
-      fechaCreacion: getCurrentDateTime(),
-    }));
-  }, [paciente.id]);
+    if (id) {
+      // Load existing pase
+      const existingPase = mockPases.find(p => p.id === id);
+      if (existingPase) {
+        setFormData({
+          id: existingPase.id,
+          antecedentes: existingPase.antecedentes,
+          gcs_rass: existingPase.gcs_rass,
+          atb: existingPase.atb,
+          vc_cook: existingPase.vc_cook,
+          actualmente: existingPase.actualmente,
+          pendientes: existingPase.pendientes,
+          pacienteId: existingPase.paciente_id,
+          principal: existingPase.principal,
+          antibioticos: "", // not in type
+          fechaCreacion: existingPase.fecha_creacion,
+          cultivos: existingPase.cultivos_id,
+        });
+        setIsEditing(true);
+      }
+    } else {
+      // New pase
+      setFormData(prev => ({
+        ...prev,
+        id: generateId(),
+        pacienteId: paciente.id,
+        fechaCreacion: getCurrentDateTime(),
+      }));
+    }
+  }, [id, paciente.id]);
 
   // Manejar cambios en los campos
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -197,7 +222,7 @@ const Pase = () => {
             }}
           >
             <AssignmentIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-            Nuevo Pase Médico
+            {isEditing ? "Ver Pase Médico" : "Nuevo Pase Médico"}
           </Typography>
         </Box>
         {paciente.cama && (
@@ -238,7 +263,7 @@ const Pase = () => {
           }}
         >
           <Grid container spacing={{ xs: 2, sm: 3 }} alignItems="center">
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ xs: 12, sm: 6 }}>
               <Typography
                 variant={isMobile ? "h6" : "h5"}
                 gutterBottom
@@ -257,10 +282,7 @@ const Pase = () => {
               </Typography>
             </Grid>
             <Grid
-              item
-              xs={12}
-              sm={6}
-              sx={{ textAlign: { xs: "left", sm: "right" } }}
+              sx={{ textAlign: { xs: "left", sm: "right" }, xs: 12, sm: 6 }}
             >
               <Typography
                 variant="body2"
@@ -304,7 +326,7 @@ const Pase = () => {
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={4}>
             {/* Diagnóstico Principal */}
-            <Grid item xs={12}>
+            <Grid sx={{ xs: 12 }}>
               <Typography
                 variant={isMobile ? "h6" : "h5"}
                 gutterBottom
@@ -323,6 +345,7 @@ const Pase = () => {
                 onChange={handleChange}
                 variant="outlined"
                 required
+                disabled={isEditing}
                 placeholder="Ingrese el diagnóstico principal del paciente"
                 sx={{
                   "& .MuiOutlinedInput-root": {
@@ -563,7 +586,7 @@ const Pase = () => {
             </Grid>
 
             {/* Botones de acción - Responsive */}
-            <Grid item xs={12}>
+            <Grid sx={{ xs: 12 }}>
               <Box
                 sx={{
                   display: "flex",

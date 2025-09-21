@@ -137,7 +137,7 @@ const ListaPases: React.FC<ListaPasesProps> = ({
                       { label: "Antecedentes", value: pase.antecedentes },
                       { label: "Pendientes", value: pase.pendientes },
                       { label: "GCS / RASS", value: pase.gcs_rass },
-                      { label: "Antibióticos", value: pase.antibioticos },
+                      { label: "Antibióticos", value: pase.atb },
                       { label: "VC/Cook", value: pase.vc_cook },
                     ].map((item, idx) => (
                       <ListItem key={idx} sx={{ px: 0 }}>

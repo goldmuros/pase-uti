@@ -34,8 +34,9 @@ const ListaCultivos: React.FC<ListaCultivosProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const formatearFecha = useCallback((fecha: Date) => {
-    return fecha.toLocaleDateString("es-ES", {
+  const formatearFecha = useCallback((fecha: string | null) => {
+    if (!fecha) return "Pendiente";
+    return new Date(fecha).toLocaleDateString("es-ES", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -43,7 +44,7 @@ const ListaCultivos: React.FC<ListaCultivosProps> = ({
   }, []);
 
   const getEstadoCultivo = (cultivo: Cultivos) => {
-    return cultivo.fechaRecibido
+    return cultivo.fecha_recibido
       ? { color: "success" as const, label: "Recibido" }
       : { color: "warning" as const, label: "Pendiente" };
   };
@@ -119,7 +120,7 @@ const ListaCultivos: React.FC<ListaCultivosProps> = ({
                         color="text.secondary"
                         sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}
                       >
-                        Solicitado: {formatearFecha(cultivo.fechaSolicitud)}
+                        Solicitado: {formatearFecha(cultivo.fecha_solicitud)}
                       </Typography>
                     </Box>
                     <Chip
@@ -140,7 +141,7 @@ const ListaCultivos: React.FC<ListaCultivosProps> = ({
                       <Grid sx={{ xs: 6 }}>
                         <Typography variant="body2" color="text.secondary">
                           <strong>Fecha Recibido:</strong>{" "}
-                          {formatearFecha(cultivo.fechaRecibido)}
+                          {formatearFecha(cultivo.fecha_recibido)}
                         </Typography>
                       </Grid>
                     </Grid>

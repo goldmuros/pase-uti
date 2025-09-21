@@ -1,4 +1,6 @@
 import ListaCultivos from "@/pages/ListaCultivos";
+import NuevoCultivo from "@/pages/NuevoCultivo";
+import NuevoPase from "@/pages/NuevoPase";
 import DetallePaciente from "../pages/DetallePaciente";
 import ErrorBoundary from "../pages/ErrorBoundary";
 import Home from "../pages/Home";
@@ -46,6 +48,10 @@ const routes = [
             index: true,
             element: <ListaCultivos />,
           },
+          {
+            path: "nuevo",
+            element: <NuevoCultivo />,
+          },
         ],
       },
       {
@@ -54,6 +60,10 @@ const routes = [
           {
             index: true,
             element: <ListaPases />,
+          },
+          {
+            path: "nuevo",
+            element: <NuevoPase />,
           },
           {
             path: ":id", // Esto crea la ruta /pacientes/:id

@@ -1,3 +1,4 @@
+import { mockCamas } from "@/mock/camas";
 import {
   Add as AddIcon,
   Assignment as AssignmentIcon,
@@ -25,87 +26,8 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Paciente } from "../types/Paciente";
-
-// Mock data (esto vendría de tu archivo de mock)
-const mockPacientes: Paciente[] = [
-  {
-    id: "1",
-    nombre: "Juan Carlos",
-    apellido: "Pérez García",
-    cama: "101",
-    fechaIngreso: "2025-08-28",
-    activo: true,
-  },
-  {
-    id: "2",
-    nombre: "María Elena",
-    apellido: "Rodríguez López",
-    cama: "102",
-    fechaIngreso: "2025-08-27",
-    activo: true,
-  },
-  {
-    id: "3",
-    nombre: "Carlos Alberto",
-    apellido: "Martínez Silva",
-    cama: "103",
-    fechaIngreso: "2025-08-25",
-    activo: false,
-  },
-];
-
-// Tipos para el estado del componente
-interface ListaPacientesState {
-  pacientes: Paciente[];
-  isLoading: boolean;
-  error: string | null;
-}
-
-// Hook personalizado para obtener datos de pacientes
-const usePacientesData = () => {
-  const [state, setState] = useState<ListaPacientesState>({
-    pacientes: [],
-    isLoading: true,
-    error: null,
-  });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-      try {
-        // Simular delay de API
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        // Ordenar pacientes por fecha de ingreso (más recientes primero)
-        const pacientesOrdenados = mockPacientes.sort(
-          (a, b) =>
-            new Date(b.fechaIngreso).getTime() -
-            new Date(a.fechaIngreso).getTime()
-        );
-
-        setState({
-          pacientes: pacientesOrdenados,
-          isLoading: false,
-          error: null,
-        });
-      } catch (error) {
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: "Error al cargar los pacientes",
-        }));
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  return state;
-};
+import { usePacientesData } from "../hooks/usePacienteData";
 
 // Componente principal
 const ListaPacientes: React.FC = () => {
@@ -120,12 +42,18 @@ const ListaPacientes: React.FC = () => {
     navigate(`/pacientes/${pacienteId}`);
   };
 
-  const agregarPase = (pacienteId: string, cama: string) => {
-    navigate(`/pases/${pacienteId}?cama=${cama}`);
+  const agregarPase = (
+    pacienteId: string,
+    camaId: string | null | undefined
+  ) => {
+    navigate(`/pases/nuevo?pacienteId=${pacienteId}&cama=${camaId || ""}`);
   };
 
-  const agregarCultivos = (pacienteId: string, cama: string) => {
-    navigate(`/pacientes/cultivos/${pacienteId}?cama=${cama}`);
+  const agregarCultivos = (
+    pacienteId: string,
+    camaId: string | null | undefined
+  ) => {
+    navigate(`/cultivos/nuevo?pacienteId=${pacienteId}`);
   };
 
   const agregarNuevoPaciente = () => {
@@ -147,7 +75,7 @@ const ListaPacientes: React.FC = () => {
         <Skeleton variant="text" height={60} sx={{ mb: 2 }} />
         <Grid container spacing={{ xs: 1, sm: 2, md: 3 }}>
           {Array.from({ length: 6 }, (_, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
+            <Grid sx={{ xs: 12, sm: 6, md: 4 }} key={index}>
               <Skeleton
                 variant="rectangular"
                 height={200}
@@ -223,7 +151,7 @@ const ListaPacientes: React.FC = () => {
         spacing={{ xs: 1, sm: 2 }}
         sx={{ mb: { xs: 2, sm: 3, md: 4 } }}
       >
-        <Grid item xs={12} sm={4}>
+        <Grid sx={{ xs: 12, sm: 4 }}>
           <Paper
             sx={{
               p: { xs: 1.5, sm: 2 },
@@ -247,7 +175,7 @@ const ListaPacientes: React.FC = () => {
             </Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
           <Paper
             sx={{
               p: { xs: 1.5, sm: 2 },
@@ -271,7 +199,7 @@ const ListaPacientes: React.FC = () => {
             </Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
           <Paper
             sx={{
               p: { xs: 1.5, sm: 2 },
@@ -344,7 +272,7 @@ const ListaPacientes: React.FC = () => {
                 sx={{ mb: { xs: 3, sm: 4 } }}
               >
                 {pacientesActivos.map(paciente => (
-                  <Grid item xs={12} sm={6} lg={4} key={paciente.id}>
+                  <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={paciente.id}>
                     <Card
                       elevation={2}
                       sx={{
@@ -381,7 +309,16 @@ const ListaPacientes: React.FC = () => {
                               sx={{ fontWeight: "bold" }}
                             >
                               <BedIcon fontSize="small" sx={{ mr: 1 }} />
-                              Cama: {paciente.cama}
+                              {paciente.cama_id
+                                ? (() => {
+                                    const cama = mockCamas.find(
+                                      c => c.id === paciente.cama_id
+                                    );
+                                    return cama
+                                      ? `Cama ${cama.numero} (${cama.sala})`
+                                      : "Cama no asignada";
+                                  })()
+                                : "Cama no asignada"}
                             </Typography>
                             <Chip
                               size="small"
@@ -410,7 +347,7 @@ const ListaPacientes: React.FC = () => {
                                 fontSize: { xs: "0.75rem", sm: "0.875rem" },
                               }}
                             >
-                              Ingreso: {formatFecha(paciente.fechaIngreso)}
+                              Ingreso: {formatFecha(paciente.fecha_ingreso)}
                             </Typography>
                           </Box>
                         }
@@ -431,7 +368,7 @@ const ListaPacientes: React.FC = () => {
                           startIcon={<AssignmentIcon />}
                           onClick={event => {
                             event.stopPropagation();
-                            agregarPase(paciente.id, paciente.cama);
+                            agregarPase(paciente.id, paciente.cama_id);
                           }}
                           sx={{
                             borderRadius: 2,
@@ -448,7 +385,7 @@ const ListaPacientes: React.FC = () => {
                           startIcon={<ScienceIcon />}
                           onClick={event => {
                             event.stopPropagation();
-                            agregarCultivos(paciente.id, paciente.cama);
+                            agregarCultivos(paciente.id, paciente.cama_id);
                           }}
                           sx={{
                             borderRadius: 2,
@@ -482,7 +419,7 @@ const ListaPacientes: React.FC = () => {
               </Typography>
               <Grid container spacing={{ xs: 2, sm: 3 }}>
                 {pacientesInactivos.map(paciente => (
-                  <Grid item xs={12} sm={6} lg={4} key={paciente.id}>
+                  <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={paciente.id}>
                     <Card
                       elevation={1}
                       sx={{
@@ -520,7 +457,16 @@ const ListaPacientes: React.FC = () => {
                               color="text.secondary"
                             >
                               <BedIcon fontSize="small" sx={{ mr: 1 }} />
-                              Cama: {paciente.cama}
+                              {paciente.cama_id
+                                ? (() => {
+                                    const cama = mockCamas.find(
+                                      c => c.id === paciente.cama_id
+                                    );
+                                    return cama
+                                      ? `Cama ${cama.numero} (${cama.sala})`
+                                      : "Cama no asignada";
+                                  })()
+                                : "Cama no asignada"}
                             </Typography>
                             <Chip
                               size="small"
@@ -549,7 +495,7 @@ const ListaPacientes: React.FC = () => {
                                 fontSize: { xs: "0.75rem", sm: "0.875rem" },
                               }}
                             >
-                              Ingreso: {formatFecha(paciente.fechaIngreso)}
+                              Ingreso: {formatFecha(paciente.fecha_ingreso)}
                             </Typography>
                           </Box>
                         }
