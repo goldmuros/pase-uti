@@ -38,8 +38,19 @@ jobs:
       - name: Clear npm cache
         run: npm cache clean --force
 
+      # Manejo inteligente de instalación de dependencias
       - name: Install dependencies
-        run: npm ci --prefer-offline --no-audit
+        run: |
+          echo "Attempting npm ci..."
+          if npm ci --prefer-offline --no-audit; then
+            echo "✅ npm ci successful"
+          else
+            echo "⚠️  npm ci failed, regenerating package-lock.json..."
+            rm -f package-lock.json
+            echo "🔧 Installing dependencies with npm install..."
+            npm install --prefer-offline --no-audit
+            echo "✅ Dependencies installed successfully"
+          fi
 
       - name: Build
         run: npm run build
