@@ -1,3 +1,4 @@
+import type { Pase } from "@/types/Pase";
 import {
   Box,
   Button,
@@ -15,25 +16,24 @@ import { mockCultivos } from "../mock/cultivos";
 import { mockMedicos } from "../mock/medicos";
 import { mockPacientes } from "../mock/pacientes";
 import { mockPases } from "../mock/pases";
-import type { PaseProps } from "../types/Pase";
 
 const NuevoPase = (): ReactNode => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<
-    Omit<PaseProps, "id" | "fecha_creacion">
-  >({
-    antecedentes: "",
-    gcs_rass: "",
-    atb: "",
-    vc_cook: "",
-    actualmente: "",
-    pendientes: "",
-    paciente_id: "",
-    principal: "",
-    medico_id: "",
-    cultivos_id: "",
-    fecha_modificacion: "",
-  });
+  const [formData, setFormData] = useState<Omit<Pase, "id" | "fecha_creacion">>(
+    {
+      antecedentes: "",
+      gcs_rass: "",
+      atb: "",
+      vc_cook: "",
+      actualmente: "",
+      pendientes: "",
+      paciente_id: "",
+      principal: "",
+      medico_id: "",
+      cultivos_id: "",
+      fecha_modificacion: "",
+    }
+  );
 
   const handleChange =
     (field: keyof typeof formData) =>
@@ -48,7 +48,7 @@ const NuevoPase = (): ReactNode => {
     event.preventDefault();
 
     // Create new pase
-    const newPase: PaseProps = {
+    const newPase: Pase = {
       ...formData,
       id: Date.now().toString(),
       fecha_creacion: new Date().toISOString(),

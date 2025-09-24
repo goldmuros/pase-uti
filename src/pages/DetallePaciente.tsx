@@ -1,5 +1,5 @@
-import ListaCultivos from "@/components/Pacientes/Dellate/ListaCultivos";
-import ListaPases from "@/components/Pacientes/Dellate/ListaPases";
+import ListaCultivos from "@/components/Pacientes/Detalle/ListaCultivos";
+import ListaPases from "@/components/Pacientes/Detalle/ListaPases";
 import {
   ArrowBack as ArrowBackIcon,
   Assignment as AssignmentIcon,
@@ -45,14 +45,14 @@ const DetallePaciente: React.FC = () => {
   const { paciente, pases, cultivos, isLoading, error } = usePacienteData(id);
 
   const handleCultivoChange = useCallback(
-    (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) => {
       setExpandedCultivo(isExpanded ? panel : false);
     },
     []
   );
 
   const handlePaseChange = useCallback(
-    (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) => {
       setExpandedPase(isExpanded ? panel : false);
     },
     []

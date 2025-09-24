@@ -106,7 +106,7 @@ const usePasesAgrupadosData = () => {
         setState(prev => ({
           ...prev,
           isLoading: false,
-          error: error + "Error al cargar los pases médicos",
+          error: `Error al cargar los pases médicos: ${error instanceof Error ? error.message : String(error)}`,
         }));
       }
     };

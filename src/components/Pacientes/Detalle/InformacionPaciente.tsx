@@ -1,3 +1,4 @@
+import { mockCamas } from "@/mock/camas";
 import type { Paciente } from "@/types/Paciente";
 import type { Pase } from "@/types/Pase";
 import {
@@ -24,7 +25,7 @@ const InformacionPaciente: React.FC<{
     return Math.floor(diferencia / (1000 * 3600 * 24));
   };
 
-  const diasIngreso = calcularDiasIngreso(paciente.fechaIngreso);
+  const diasIngreso = calcularDiasIngreso(paciente.fecha_ingreso);
 
   return (
     <Card sx={{ mb: 3 }}>
@@ -46,7 +47,18 @@ const InformacionPaciente: React.FC<{
                 Cama:
               </Typography>
               <Chip
-                label={paciente.cama}
+                label={
+                  paciente.cama_id
+                    ? (() => {
+                        const cama = mockCamas.find(
+                          c => c.id === paciente.cama_id
+                        );
+                        return cama
+                          ? `Cama ${cama.numero} (${cama.sala})`
+                          : "Cama no asignada";
+                      })()
+                    : "Cama no asignada"
+                }
                 color="primary"
                 variant="outlined"
                 size="small"
@@ -59,7 +71,7 @@ const InformacionPaciente: React.FC<{
                 Fecha de Ingreso:
               </Typography>
               <Typography variant="body1">
-                {new Date(paciente.fechaIngreso).toLocaleDateString("es-ES")}
+                {new Date(paciente.fecha_ingreso).toLocaleDateString("es-ES")}
               </Typography>
             </Box>
 
@@ -77,7 +89,7 @@ const InformacionPaciente: React.FC<{
           </Grid>
 
           <Grid sx={{ xs: 12, md: 6 }}>
-            {paciente.motivoIngreso && (
+            {paciente.motivo_ingreso && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body1" sx={{ fontWeight: "bold", mb: 1 }}>
                   Motivo de Ingreso:
@@ -93,7 +105,7 @@ const InformacionPaciente: React.FC<{
                     borderColor: "grey.200",
                   }}
                 >
-                  {paciente.motivoIngreso}
+                  {paciente.motivo_ingreso}
                 </Typography>
               </Box>
             )}

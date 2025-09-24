@@ -66,7 +66,7 @@ const useCultivosData = () => {
         setState(prev => ({
           ...prev,
           isLoading: false,
-          error: error + "Error al cargar los cultivos",
+          error: `Error al cargar los cultivos: ${error instanceof Error ? error.message : String(error)}`,
         }));
       }
     };

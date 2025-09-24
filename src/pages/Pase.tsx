@@ -24,9 +24,9 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { mockPases } from "../mock/pases";
-import type { PaseProps } from "../types/Pase";
+import type { Pase as IPase } from "../types/Pase";
 
-const defaultData: Omit<PaseProps, "id" | "fecha_creacion"> = {
+const defaultData: Omit<IPase, "id" | "fecha_creacion"> = {
   paciente_id: "",
   medico_id: "",
   principal: "",
@@ -140,7 +140,7 @@ const Pase = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Create new pase
-      const newPase: PaseProps = {
+      const newPase: IPase = {
         ...formData,
         id: generateId(),
         fecha_creacion: getCurrentDateTime(),
@@ -157,7 +157,9 @@ const Pase = () => {
         navigate(`/pacientes/${paciente.id}`);
       }, 2000);
     } catch (error) {
-      setSubmitMessage(error + "Error al crear el pase médico");
+      setSubmitMessage(
+        `Error al crear el pase médico: ${error instanceof Error ? error.message : String(error)}`
+      );
     } finally {
       setIsSubmitting(false);
     }
