@@ -20,7 +20,6 @@ import { useNavigate } from "react-router-dom";
 const Home = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const navigate = useNavigate();
 
   const handleCardClick = (path: string) => {

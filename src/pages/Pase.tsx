@@ -24,20 +24,20 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { mockPases } from "../mock/pases";
+import type { PaseProps } from "../types/Pase";
 
-const defaultData = {
-  id: "",
+const defaultData: Omit<PaseProps, "id" | "fecha_creacion"> = {
+  paciente_id: "",
+  medico_id: "",
+  principal: "",
   antecedentes: "",
   gcs_rass: "",
+  cultivos_id: "",
   atb: "",
   vc_cook: "",
   actualmente: "",
   pendientes: "",
-  pacienteId: "",
-  principal: "",
-  antibioticos: "",
-  fechaCreacion: "",
-  cultivos: "",
+  fecha_modificacion: "",
 };
 
 const Pase = () => {
@@ -45,12 +45,12 @@ const Pase = () => {
   const { id } = useParams(); // id is pase id
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   const [formData, setFormData] = useState(defaultData);
   const [submitMessage, setSubmitMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [fechaCreacion, setFechaCreacion] = useState("");
 
   const urlParams = new URLSearchParams(window.location.search);
   const paciente = {
@@ -83,29 +83,29 @@ const Pase = () => {
       const existingPase = mockPases.find(p => p.id === id);
       if (existingPase) {
         setFormData({
-          id: existingPase.id,
+          paciente_id: existingPase.paciente_id,
+          medico_id: existingPase.medico_id,
+          principal: existingPase.principal,
           antecedentes: existingPase.antecedentes,
           gcs_rass: existingPase.gcs_rass,
+          cultivos_id: existingPase.cultivos_id,
           atb: existingPase.atb,
           vc_cook: existingPase.vc_cook,
           actualmente: existingPase.actualmente,
           pendientes: existingPase.pendientes,
-          pacienteId: existingPase.paciente_id,
-          principal: existingPase.principal,
-          antibioticos: "", // not in type
-          fechaCreacion: existingPase.fecha_creacion,
-          cultivos: existingPase.cultivos_id,
+          fecha_modificacion: existingPase.fecha_modificacion,
         });
+        setFechaCreacion(existingPase.fecha_creacion);
         setIsEditing(true);
       }
     } else {
       // New pase
+      const currentTime = getCurrentDateTime();
       setFormData(prev => ({
         ...prev,
-        id: generateId(),
-        pacienteId: paciente.id,
-        fechaCreacion: getCurrentDateTime(),
+        paciente_id: paciente.id,
       }));
+      setFechaCreacion(currentTime);
     }
   }, [id, paciente.id]);
 
@@ -126,7 +126,7 @@ const Pase = () => {
 
     try {
       // Validar campos requeridos
-      if (!formData.pacienteId) {
+      if (!formData.paciente_id) {
         setSubmitMessage("Error: ID del paciente es requerido");
         return;
       }
@@ -139,8 +139,17 @@ const Pase = () => {
       // Simular delay de API
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Aquí puedes agregar la lógica para enviar los datos a tu API
-      console.log("Datos del formulario:", formData);
+      // Create new pase
+      const newPase: PaseProps = {
+        ...formData,
+        id: generateId(),
+        fecha_creacion: getCurrentDateTime(),
+        fecha_modificacion: getCurrentDateTime(),
+      };
+
+      // Add to mock data (in real app, this would be an API call)
+      mockPases.push(newPase);
+
       setSubmitMessage("Pase médico creado exitosamente");
 
       // Opcional: redirigir después del éxito
@@ -148,7 +157,7 @@ const Pase = () => {
         navigate(`/pacientes/${paciente.id}`);
       }, 2000);
     } catch (error) {
-      setSubmitMessage("Error al crear el pase médico");
+      setSubmitMessage(error + "Error al crear el pase médico");
     } finally {
       setIsSubmitting(false);
     }
@@ -158,9 +167,7 @@ const Pase = () => {
   const resetForm = () => {
     setFormData({
       ...defaultData,
-      id: generateId(),
-      pacienteId: paciente.id,
-      fechaCreacion: getCurrentDateTime(),
+      paciente_id: paciente.id,
     });
     setSubmitMessage("");
   };
@@ -297,7 +304,7 @@ const Pase = () => {
                 variant="body1"
                 sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
               >
-                {formatFecha(formData.fechaCreacion)}
+                {formatFecha(fechaCreacion)}
               </Typography>
             </Grid>
           </Grid>
@@ -347,6 +354,30 @@ const Pase = () => {
                 required
                 disabled={isEditing}
                 placeholder="Ingrese el diagnóstico principal del paciente"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                  },
+                }}
+              />
+            </Grid>
+
+            {/* Médico */}
+            <Grid sx={{ xs: 12, md: 6 }}>
+              <Typography
+                variant="subtitle1"
+                gutterBottom
+                sx={{ fontWeight: "medium" }}
+              >
+                Médico ID
+              </Typography>
+              <TextField
+                fullWidth
+                name="medico_id"
+                value={formData.medico_id}
+                onChange={handleChange}
+                variant="outlined"
+                placeholder="ID del médico responsable"
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: 2,
@@ -541,42 +572,15 @@ const Pase = () => {
                 gutterBottom
                 sx={{ fontWeight: "medium" }}
               >
-                Antibióticos
+                Cultivos ID
               </Typography>
               <TextField
                 fullWidth
-                name="antibioticos"
-                value={formData.antibioticos}
+                name="cultivos_id"
+                value={formData.cultivos_id}
                 onChange={handleChange}
                 variant="outlined"
-                multiline
-                rows={3}
-                placeholder="Detalle del esquema antibiótico: medicamentos, dosis, frecuencia, duración"
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-            </Grid>
-
-            <Grid sx={{ xs: 12 }}>
-              <Typography
-                variant="subtitle1"
-                gutterBottom
-                sx={{ fontWeight: "medium" }}
-              >
-                Cultivos
-              </Typography>
-              <TextField
-                fullWidth
-                name="cultivos"
-                value={formData.cultivos}
-                onChange={handleChange}
-                variant="outlined"
-                multiline
-                rows={3}
-                placeholder="Información sobre cultivos realizados, pendientes y resultados"
+                placeholder="ID del cultivo asociado"
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: 2,

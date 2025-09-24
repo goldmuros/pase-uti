@@ -106,7 +106,7 @@ const usePasesAgrupadosData = () => {
         setState(prev => ({
           ...prev,
           isLoading: false,
-          error: "Error al cargar los pases médicos",
+          error: error + "Error al cargar los pases médicos",
         }));
       }
     };
@@ -122,7 +122,6 @@ const ListaPases: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   const { pasesPorPaciente, isLoading, error } = usePasesAgrupadosData();
 

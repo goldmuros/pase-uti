@@ -34,7 +34,6 @@ const ListaPacientes: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   const { pacientes, isLoading, error } = usePacientesData();
 
@@ -49,10 +48,7 @@ const ListaPacientes: React.FC = () => {
     navigate(`/pases/nuevo?pacienteId=${pacienteId}&cama=${camaId || ""}`);
   };
 
-  const agregarCultivos = (
-    pacienteId: string,
-    camaId: string | null | undefined
-  ) => {
+  const agregarCultivos = (pacienteId: string) => {
     navigate(`/cultivos/nuevo?pacienteId=${pacienteId}`);
   };
 
@@ -385,7 +381,7 @@ const ListaPacientes: React.FC = () => {
                           startIcon={<ScienceIcon />}
                           onClick={event => {
                             event.stopPropagation();
-                            agregarCultivos(paciente.id, paciente.cama_id);
+                            agregarCultivos(paciente.id);
                           }}
                           sx={{
                             borderRadius: 2,

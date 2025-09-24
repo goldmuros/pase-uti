@@ -38,7 +38,6 @@ const DetallePaciente: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   const [expandedCultivo, setExpandedCultivo] = useState<string | false>(false);
   const [expandedPase, setExpandedPase] = useState<string | false>(false);

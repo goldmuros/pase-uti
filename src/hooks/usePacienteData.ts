@@ -80,7 +80,7 @@ export const usePacienteData = (id: string) => {
         setState(prev => ({
           ...prev,
           isLoading: false,
-          error: "Error al cargar los datos del paciente",
+          error: error + "Error al cargar los datos del paciente",
         }));
       }
     };
@@ -125,7 +125,7 @@ export const usePacientesData = () => {
         setState(prev => ({
           ...prev,
           isLoading: false,
-          error: "Error al cargar los pacientes",
+          error: error + "Error al cargar los pacientes",
         }));
       }
     };

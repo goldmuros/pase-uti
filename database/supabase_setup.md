@@ -3,6 +3,7 @@
 ## Table Creation Scripts
 
 ### 1. Roles Table
+
 ```sql
 CREATE TABLE roles (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -19,6 +20,7 @@ CREATE POLICY "Allow authenticated users to read roles" ON roles
 ```
 
 ### 2. Médicos Table
+
 ```sql
 CREATE TABLE medicos (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -51,6 +53,7 @@ CREATE POLICY "Allow admins to manage medicos" ON medicos
 ```
 
 ### 3. Camas Table
+
 ```sql
 CREATE TABLE camas (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -73,6 +76,7 @@ CREATE POLICY "Allow medicos to update camas" ON camas
 ```
 
 ### 4. Pacientes Table
+
 ```sql
 CREATE TABLE pacientes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -99,6 +103,7 @@ CREATE POLICY "Allow medicos to manage pacientes" ON pacientes
 ```
 
 ### 5. Pases Table
+
 ```sql
 CREATE TABLE pases (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -128,6 +133,7 @@ CREATE POLICY "Allow medicos to manage pases" ON pases
 ```
 
 ### 6. Cultivos Table
+
 ```sql
 CREATE TABLE cultivos (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -151,6 +157,7 @@ CREATE POLICY "Allow medicos to manage cultivos" ON cultivos
 ```
 
 ## Indexes for Performance
+
 ```sql
 -- Indexes for foreign keys
 CREATE INDEX idx_medicos_rol_id ON medicos(rol_id);
@@ -167,6 +174,7 @@ CREATE INDEX idx_cultivos_fecha_solicitud ON cultivos(fecha_solicitud);
 ```
 
 ## Triggers for Updated At
+
 ```sql
 -- Function to update updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -184,6 +192,7 @@ CREATE TRIGGER update_pases_fecha_modificacion BEFORE UPDATE ON pases FOR EACH R
 ```
 
 ## Insert Initial Data
+
 ```sql
 -- Insert roles
 INSERT INTO roles (tipo_rol) VALUES
@@ -198,3 +207,4 @@ INSERT INTO camas (numero, sala) VALUES
 ('103', 'UTI-1'),
 ('201', 'UTI-2'),
 ('202', 'UTI-2');
+```

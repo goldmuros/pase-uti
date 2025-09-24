@@ -11,6 +11,7 @@ This folder contains the improved database design for the UTI Medical Management
 ## Key Improvements Made
 
 ### Schema Enhancements
+
 - **Added proper relationships**: Fixed the incorrect `pase_id` in Paciente table; now Pase has `paciente_id` and `medico_id`
 - **New tables**: Added `camas` (beds) table for better bed management
 - **Renamed tables**: `User` → `medicos` for clarity
@@ -18,11 +19,13 @@ This folder contains the improved database design for the UTI Medical Management
 - **Status fields**: `activo` for users and patients, `ocupada` for beds
 
 ### Security
+
 - Row Level Security (RLS) policies for all tables
 - Role-based access control
 - Encryption considerations for sensitive data
 
 ### Performance
+
 - Proper indexes on foreign keys and common query fields
 - Triggers for automatic timestamp updates
 
@@ -36,6 +39,7 @@ This folder contains the improved database design for the UTI Medical Management
 6. **cultivos** - Laboratory culture results
 
 ## Relationships
+
 - Roles → Médicos (1:many)
 - Camas → Pacientes (1:many)
 - Médicos → Pases (1:many, creator)
@@ -43,6 +47,7 @@ This folder contains the improved database design for the UTI Medical Management
 - Pacientes → Cultivos (1:many)
 
 ## Next Steps
+
 1. Execute the SQL scripts in `supabase_setup.md` in your Supabase project
 2. Insert the mock data from `mock_data.md` for testing
 3. Update your application types and API calls to match the new schema

@@ -1,4 +1,4 @@
-export interface Pase {
+export interface PaseProps {
   id: string;
   paciente_id: string;
   medico_id: string;

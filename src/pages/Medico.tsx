@@ -1,5 +1,5 @@
 const Medico = () => {
-	return <>SOY MEDICO</>;
+  return <>SOY MEDICO</>;
 };
 
 export default Medico;

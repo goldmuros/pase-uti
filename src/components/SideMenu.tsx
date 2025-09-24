@@ -11,7 +11,7 @@ import MenuContent from "./MenuContent";
 const drawerWidth = 280; // Aumentar ligeramente para mejor usabilidad
 
 // Drawer para desktop (persistente)
-const DesktopDrawer = styled(MuiDrawer)(({ theme }) => ({
+const DesktopDrawer = styled(MuiDrawer)(() => ({
   width: drawerWidth,
   flexShrink: 0,
   boxSizing: "border-box",

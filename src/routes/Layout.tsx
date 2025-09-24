@@ -50,7 +50,6 @@ const Main = styled("main", {
 const Layout = (): ReactNode => {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md")); // 900px+
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md")); // 600px - 900px
   const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // <600px
 
   // Estado del drawer

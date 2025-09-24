@@ -66,7 +66,7 @@ const useCultivosData = () => {
         setState(prev => ({
           ...prev,
           isLoading: false,
-          error: "Error al cargar los cultivos",
+          error: error + "Error al cargar los cultivos",
         }));
       }
     };
@@ -82,7 +82,6 @@ const ListaCultivos: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   const { cultivos, isLoading, error } = useCultivosData();
 

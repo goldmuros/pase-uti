@@ -35,7 +35,7 @@ const NuevoCultivo = (): ReactNode => {
 
   const handleChange =
     (field: keyof typeof formData) =>
-    (event: React.ChangeEvent<HTMLInputElement> | any) => {
+    (event: React.ChangeEvent<HTMLInputElement>) => {
       setFormData(prev => ({
         ...prev,
         [field]: event.target.value,
@@ -84,7 +84,7 @@ const NuevoCultivo = (): ReactNode => {
             <InputLabel>Paciente</InputLabel>
             <Select
               value={formData.paciente_id}
-              onChange={handleChange("paciente_id")}
+              onChange={() => handleChange("paciente_id")}
               label="Paciente"
             >
               {mockPacientes

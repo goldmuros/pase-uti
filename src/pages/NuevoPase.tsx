@@ -11,27 +11,33 @@ import {
 } from "@mui/material";
 import React, { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { mockCultivos } from "../mock/cultivos";
+import { mockMedicos } from "../mock/medicos";
 import { mockPacientes } from "../mock/pacientes";
 import { mockPases } from "../mock/pases";
-import type { Pase } from "../types/Pase";
+import type { PaseProps } from "../types/Pase";
 
 const NuevoPase = (): ReactNode => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<Omit<Pase, "id" | "fechaCreacion">>({
+  const [formData, setFormData] = useState<
+    Omit<PaseProps, "id" | "fecha_creacion">
+  >({
     antecedentes: "",
     gcs_rass: "",
     atb: "",
     vc_cook: "",
     actualmente: "",
     pendientes: "",
-    pacienteId: "",
+    paciente_id: "",
     principal: "",
-    antibioticos: "",
+    medico_id: "",
+    cultivos_id: "",
+    fecha_modificacion: "",
   });
 
   const handleChange =
     (field: keyof typeof formData) =>
-    (event: React.ChangeEvent<HTMLInputElement> | any) => {
+    (event: React.ChangeEvent<HTMLInputElement>) => {
       setFormData(prev => ({
         ...prev,
         [field]: event.target.value,
@@ -42,10 +48,11 @@ const NuevoPase = (): ReactNode => {
     event.preventDefault();
 
     // Create new pase
-    const newPase: Pase = {
+    const newPase: PaseProps = {
       ...formData,
       id: Date.now().toString(),
-      fechaCreacion: new Date().toISOString(),
+      fecha_creacion: new Date().toISOString(),
+      fecha_modificacion: new Date().toISOString(),
     };
 
     // Add to mock data (in real app, this would be an API call)
@@ -70,13 +77,50 @@ const NuevoPase = (): ReactNode => {
           <FormControl fullWidth required>
             <InputLabel>Paciente</InputLabel>
             <Select
-              value={formData.pacienteId}
-              onChange={handleChange("pacienteId")}
+              value={formData.paciente_id}
+              onChange={() => handleChange("paciente_id")}
               label="Paciente"
             >
               {mockPacientes.map(paciente => (
                 <MenuItem key={paciente.id} value={paciente.id}>
                   {paciente.nombre} {paciente.apellido}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+
+        <Box sx={{ mb: 3 }}>
+          <FormControl fullWidth required>
+            <InputLabel>Médico</InputLabel>
+            <Select
+              value={formData.medico_id}
+              onChange={() => handleChange("medico_id")}
+              label="Médico"
+            >
+              {mockMedicos.map(medico => (
+                <MenuItem key={medico.id} value={medico.id}>
+                  {medico.nombre} {medico.apellido}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+
+        <Box sx={{ mb: 3 }}>
+          <FormControl fullWidth>
+            <InputLabel>Cultivos</InputLabel>
+            <Select
+              value={formData.cultivos_id}
+              onChange={() => handleChange("cultivos_id")}
+              label="Cultivos"
+            >
+              <MenuItem value="">
+                <em>Ninguno</em>
+              </MenuItem>
+              {mockCultivos.map(cultivo => (
+                <MenuItem key={cultivo.id} value={cultivo.id}>
+                  {cultivo.nombre}
                 </MenuItem>
               ))}
             </Select>
@@ -153,15 +197,6 @@ const NuevoPase = (): ReactNode => {
               label="VC Cook"
               value={formData.vc_cook}
               onChange={handleChange("vc_cook")}
-            />
-          </Box>
-
-          <Box sx={{ flex: 1, minWidth: 200 }}>
-            <TextField
-              fullWidth
-              label="Antibióticos"
-              value={formData.antibioticos}
-              onChange={handleChange("antibioticos")}
             />
           </Box>
         </Box>
