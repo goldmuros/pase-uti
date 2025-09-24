@@ -24,7 +24,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+          # Sin caché para evitar conflictos
 
       # Configurar npm para mayor tolerancia a errores
       - name: Configure npm
@@ -38,19 +38,17 @@ jobs:
       - name: Clear npm cache
         run: npm cache clean --force
 
-      # Manejo inteligente de instalación de dependencias
-      - name: Install dependencies
+      # Limpieza completa: package-lock.json + node_modules
+      - name: Complete clean install
         run: |
-          echo "Attempting npm ci..."
-          if npm ci --prefer-offline --no-audit; then
-            echo "✅ npm ci successful"
-          else
-            echo "⚠️  npm ci failed, regenerating package-lock.json..."
-            rm -f package-lock.json
-            echo "🔧 Installing dependencies with npm install..."
-            npm install --prefer-offline --no-audit
-            echo "✅ Dependencies installed successfully"
-          fi
+          echo "🗑️ Removing package-lock.json and node_modules..."
+          rm -f package-lock.json
+          rm -rf node_modules
+          echo "🧹 Cleaning npm cache..."
+          npm cache clean --force
+          echo "📦 Fresh install of all dependencies..."
+          npm install --prefer-offline --no-audit
+          echo "✅ Complete clean installation finished"
 
       - name: Build
         run: npm run build
