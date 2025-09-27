@@ -1,3 +1,4 @@
+import type { SelectChangeEvent } from "@mui/material";
 import {
   Box,
   Button,
@@ -46,12 +47,13 @@ const NuevoMedico = (): ReactNode => {
       }));
     };
 
-  const handleSelectChange = (field: keyof typeof formData) => event => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: event.target.value,
-    }));
-  };
+  const handleSelectChange =
+    (field: keyof typeof formData) => (event: SelectChangeEvent<unknown>) => {
+      setFormData(prev => ({
+        ...prev,
+        [field]: event.target.value,
+      }));
+    };
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
