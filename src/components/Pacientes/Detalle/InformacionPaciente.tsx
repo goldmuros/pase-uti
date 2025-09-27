@@ -1,4 +1,3 @@
-import { mockCamas } from "@/mock/camas";
 import type { Paciente } from "@/types/Paciente";
 import type { Pase } from "@/types/Pase";
 import {
@@ -47,18 +46,7 @@ const InformacionPaciente: React.FC<{
                 Cama:
               </Typography>
               <Chip
-                label={
-                  paciente.cama_id
-                    ? (() => {
-                        const cama = mockCamas.find(
-                          c => c.id === paciente.cama_id
-                        );
-                        return cama
-                          ? `Cama ${cama.numero} (${cama.sala})`
-                          : "Cama no asignada";
-                      })()
-                    : "Cama no asignada"
-                }
+                label={paciente.cama}
                 color="primary"
                 variant="outlined"
                 size="small"
