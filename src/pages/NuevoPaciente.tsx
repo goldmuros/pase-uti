@@ -33,7 +33,7 @@ const NuevoPaciente = (): ReactNode => {
 
   const handleChange =
     (field: keyof typeof formData) =>
-    (event: ChangeEvent<HTMLInputElement> | any) => {
+    (event: ChangeEvent<HTMLInputElement>) => {
       const value =
         event.target.type === "checkbox"
           ? event.target.checked

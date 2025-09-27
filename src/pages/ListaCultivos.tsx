@@ -84,7 +84,6 @@ const ListaCultivos: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const pacienteId = new URLSearchParams(window.location.search).get(
     "pacienteId"
   );

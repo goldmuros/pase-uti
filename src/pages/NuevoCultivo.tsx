@@ -11,7 +11,6 @@ import {
 } from "@mui/material";
 import React, { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { mockCamas } from "../mock/camas";
 import { mockCultivos } from "../mock/cultivos";
 import { mockPacientes } from "../mock/pacientes";
 import { mockPases } from "../mock/pases";
@@ -90,13 +89,11 @@ const NuevoCultivo = (): ReactNode => {
               {mockPacientes
                 .filter(p => p.activo)
                 .map(paciente => {
-                  const cama = paciente.cama_id
-                    ? mockCamas.find(c => c.id === paciente.cama_id)
-                    : null;
+                  const cama = paciente.cama;
                   return (
                     <MenuItem key={paciente.id} value={paciente.id}>
                       {paciente.nombre} {paciente.apellido}
-                      {cama ? ` - Cama ${cama.numero} (${cama.sala})` : ""}
+                      {cama}
                     </MenuItem>
                   );
                 })}
