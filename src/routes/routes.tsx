@@ -1,5 +1,8 @@
+import DetalleMedico from "@/pages/DetalleMedico";
 import ListaCultivos from "@/pages/ListaCultivos";
+import ListaMedicos from "@/pages/ListaMedicos";
 import NuevoCultivo from "@/pages/NuevoCultivo";
+import NuevoMedico from "@/pages/NuevoMedico";
 import NuevoPaciente from "@/pages/NuevoPaciente";
 import NuevoPase from "@/pages/NuevoPase";
 import DetallePaciente from "../pages/DetallePaciente";
@@ -7,7 +10,6 @@ import ErrorBoundary from "../pages/ErrorBoundary";
 import Home from "../pages/Home";
 import ListaPacientes from "../pages/ListaPacientes";
 import ListaPases from "../pages/ListaPases";
-import Medico from "../pages/Medico";
 import Pase from "../pages/Pase";
 import Layout from "./Layout";
 
@@ -22,8 +24,21 @@ const routes = [
         element: <Home />,
       },
       {
-        path: "medico",
-        element: <Medico />,
+        path: "medicos",
+        children: [
+          {
+            index: true,
+            element: <ListaMedicos />,
+          },
+          {
+            path: "nuevo",
+            element: <NuevoMedico />,
+          },
+          {
+            path: ":id",
+            element: <DetalleMedico />,
+          },
+        ],
       },
       {
         path: "pacientes",
