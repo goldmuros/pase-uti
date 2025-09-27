@@ -44,10 +44,10 @@ const MenuContent = (): ReactNode => {
       description: "Gestión de cultivos",
     },
     {
-      text: "Médico",
+      text: "Médicos",
       icon: <DoctorIcon />,
-      path: "/medico",
-      description: "Panel médico",
+      path: "/medicos",
+      description: "Gestión de médicos",
     },
     {
       text: "Pases",
