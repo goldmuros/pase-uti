@@ -76,11 +76,6 @@ const Layout = (): ReactNode => {
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
-      <AppHeader
-        open={open && isDesktop}
-        onClick={handleDrawerToggle}
-        isDesktop={isDesktop}
-      />
       <SideMenu
         open={open}
         onClose={handleDrawerClose}
@@ -88,6 +83,11 @@ const Layout = (): ReactNode => {
         isMobile={isMobile}
       />
       <Main open={open} isDesktop={isDesktop}>
+        <AppHeader
+          open={open && isDesktop}
+          onClick={handleDrawerToggle}
+          isDesktop={isDesktop}
+        />
         <DrawerHeader />
         <Box
           sx={{
@@ -107,9 +107,14 @@ const Layout = (): ReactNode => {
               width: "100%",
               maxWidth: "100%",
               boxSizing: "border-box",
+              "&.MuiStack-root": {
+                marginTop: 0,
+              },
             }}
           >
-            <Outlet />
+            <Box sx={{ width: "100%", overflowY: "auto" }}>
+              <Outlet />
+            </Box>
           </Stack>
         </Box>
       </Main>

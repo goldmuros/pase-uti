@@ -1,5 +1,6 @@
 import {
   ArrowBack as ArrowBackIcon,
+  ArrowForward as ArrowForwardIcon,
   Assignment as AssignmentIcon,
   Bed as BedIcon,
   CalendarToday as CalendarIcon,
@@ -7,6 +8,7 @@ import {
   Science as ScienceIcon,
   Warning as WarningIcon,
 } from "@mui/icons-material";
+import type { SelectChangeEvent } from "@mui/material";
 import {
   Alert,
   Box,
@@ -15,19 +17,30 @@ import {
   CardContent,
   Chip,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Fab,
+  FormControl,
   Grid,
   IconButton,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   Skeleton,
+  TextField,
   Tooltip,
   Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { usePacienteData } from "../hooks/usePacienteData";
+import { mockPacientes } from "../mock/pacientes";
+import type { Paciente } from "../types/Paciente";
 
 // Componente principal
 const DetallePaciente: React.FC = () => {
@@ -37,6 +50,11 @@ const DetallePaciente: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const { paciente, pases, cultivos, isLoading, error } = usePacienteData(id);
+
+  // Estado para el diálogo de baja
+  const [openDialog, setOpenDialog] = useState(false);
+  const [motivoTipo, setMotivoTipo] = useState("");
+  const [motivoDetalle, setMotivoDetalle] = useState("");
 
   const cultivosOrdenados = cultivos.sort(
     (a, b) =>
@@ -57,6 +75,46 @@ const DetallePaciente: React.FC = () => {
   const agregarCultivos = () => {
     if (paciente) {
       navigate(`/cultivos/nuevo?pacienteId=${paciente.id}`);
+    }
+  };
+
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setMotivoTipo("");
+    setMotivoDetalle("");
+  };
+
+  const handleMotivoTipoChange = (event: SelectChangeEvent<unknown>) => {
+    setMotivoTipo(event.target.value as string);
+  };
+
+  const handleMotivoDetalleChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setMotivoDetalle(event.target.value);
+  };
+
+  const handleConfirmarMovimiento = () => {
+    if (paciente && motivoTipo) {
+      // Update patient status to inactive (moved)
+      const pacienteIndex = mockPacientes.findIndex(
+        (p: Paciente) => p.id === paciente.id
+      );
+      if (pacienteIndex !== -1) {
+        mockPacientes[pacienteIndex] = {
+          ...mockPacientes[pacienteIndex],
+          activo: false,
+          fecha_alta: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      }
+      handleCloseDialog();
+      // Redirect to patient list
+      navigate("/pacientes");
     }
   };
 
@@ -138,7 +196,7 @@ const DetallePaciente: React.FC = () => {
         width: "100%",
         maxWidth: "100% !important",
         overflowY: "auto",
-        height: "100vh",
+        minHeight: "100vh",
       }}
     >
       {/* Header con botón de regreso - Responsive */}
@@ -462,6 +520,20 @@ const DetallePaciente: React.FC = () => {
           zIndex: theme.zIndex.speedDial,
         }}
       >
+        <Tooltip title="Mover paciente">
+          <Fab
+            color="error"
+            onClick={handleOpenDialog}
+            sx={{
+              boxShadow: 4,
+              width: { xs: 48, sm: 56 },
+              height: { xs: 48, sm: 56 },
+            }}
+            size={isMobile ? "medium" : "large"}
+          >
+            <ArrowForwardIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+          </Fab>
+        </Tooltip>
         <Tooltip title="Agregar nuevo cultivo">
           <Fab
             color="secondary"
@@ -491,6 +563,56 @@ const DetallePaciente: React.FC = () => {
           </Fab>
         </Tooltip>
       </Box>
+
+      {/* Diálogo de baja de paciente */}
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Mover Paciente</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 3 }}>
+            <FormControl fullWidth required>
+              <InputLabel>Tipo de Motivo</InputLabel>
+              <Select
+                value={motivoTipo}
+                label="Tipo de Motivo"
+                onChange={handleMotivoTipoChange}
+              >
+                <MenuItem value="alta">Alta</MenuItem>
+                <MenuItem value="derivación">Derivación</MenuItem>
+                <MenuItem value="sala">Sala</MenuItem>
+                <MenuItem value="obituario">Obituario</MenuItem>
+              </Select>
+            </FormControl>
+
+            <TextField
+              fullWidth
+              label="Detalle del Motivo"
+              multiline
+              rows={3}
+              value={motivoDetalle}
+              onChange={handleMotivoDetalleChange}
+              placeholder="Ingrese detalles adicionales sobre el motivo de la baja..."
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="inherit">
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirmarMovimiento}
+            variant="contained"
+            color="error"
+            disabled={!motivoTipo}
+          >
+            Mover Paciente
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

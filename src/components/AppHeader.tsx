@@ -51,7 +51,6 @@ const AppHeader = ({ open, onClick, isDesktop }: AppHeaderProps): ReactNode => {
     <AppBar position="fixed" open={open} isDesktop={isDesktop}>
       <Toolbar
         sx={{
-          minHeight: { xs: 56, sm: 64 }, // Altura responsive
           px: { xs: 1, sm: 2 }, // Padding responsive
         }}
       >
@@ -83,22 +82,8 @@ const AppHeader = ({ open, onClick, isDesktop }: AppHeaderProps): ReactNode => {
             maxWidth: { xs: "180px", sm: "none" }, // Limitar ancho en móviles
           }}
         >
-          {isDesktop ? "Sistema de Pases Médicos" : "Pases Médicos"}
+          Pases Médicos
         </Typography>
-
-        {/* Indicador de estado para desarrollo (opcional) */}
-        {process.env.NODE_ENV === "development" && (
-          <Typography
-            variant="caption"
-            sx={{
-              opacity: 0.7,
-              display: { xs: "none", sm: "block" },
-              fontSize: "0.75rem",
-            }}
-          >
-            {isDesktop ? "Desktop" : "Mobile"}
-          </Typography>
-        )}
       </Toolbar>
     </AppBar>
   );
