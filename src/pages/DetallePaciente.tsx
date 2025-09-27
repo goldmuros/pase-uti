@@ -1,5 +1,3 @@
-import ListaCultivos from "@/components/Pacientes/Dellate/ListaCultivos";
-import ListaPases from "@/components/Pacientes/Dellate/ListaPases";
 import {
   ArrowBack as ArrowBackIcon,
   Assignment as AssignmentIcon,
@@ -27,10 +25,9 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import React, { useCallback, useState } from "react";
+import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { usePacienteData } from "../hooks/usePacienteData";
-import { mockCamas } from "../mock/camas";
 
 // Componente principal
 const DetallePaciente: React.FC = () => {
@@ -38,25 +35,13 @@ const DetallePaciente: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
-
-  const [expandedCultivo, setExpandedCultivo] = useState<string | false>(false);
-  const [expandedPase, setExpandedPase] = useState<string | false>(false);
 
   const { paciente, pases, cultivos, isLoading, error } = usePacienteData(id);
 
-  const handleCultivoChange = useCallback(
-    (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
-      setExpandedCultivo(isExpanded ? panel : false);
-    },
-    []
-  );
-
-  const handlePaseChange = useCallback(
-    (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
-      setExpandedPase(isExpanded ? panel : false);
-    },
-    []
+  const cultivosOrdenados = cultivos.sort(
+    (a, b) =>
+      new Date(b.fecha_solicitud).getTime() -
+      new Date(a.fecha_solicitud).getTime()
   );
 
   const handleGoBack = () => {
@@ -65,9 +50,7 @@ const DetallePaciente: React.FC = () => {
 
   const agregarPase = () => {
     if (paciente) {
-      navigate(
-        `/pases/nuevo?pacienteId=${paciente.id}&cama=${paciente.cama_id}`
-      );
+      navigate(`/pases/nuevo?pacienteId=${paciente.id}&cama=${paciente.cama}`);
     }
   };
 
@@ -144,6 +127,7 @@ const DetallePaciente: React.FC = () => {
   }
 
   const ultimoPase = pases[0];
+  const ultimoCultivo = cultivosOrdenados[0];
 
   return (
     <Container
@@ -153,6 +137,8 @@ const DetallePaciente: React.FC = () => {
         position: "relative",
         width: "100%",
         maxWidth: "100% !important",
+        overflowY: "auto",
+        height: "100vh",
       }}
     >
       {/* Header con botón de regreso - Responsive */}
@@ -221,16 +207,7 @@ const DetallePaciente: React.FC = () => {
                   variant={isMobile ? "h6" : "h5"}
                   sx={{ fontWeight: "bold" }}
                 >
-                  {paciente.cama_id
-                    ? (() => {
-                        const cama = mockCamas.find(
-                          c => c.id === paciente.cama_id
-                        );
-                        return cama
-                          ? `Cama ${cama.numero} (${cama.sala})`
-                          : "Cama no asignada";
-                      })()
-                    : "Cama no asignada"}
+                  {paciente.cama}
                 </Typography>
               </Paper>
             </Grid>
@@ -343,14 +320,63 @@ const DetallePaciente: React.FC = () => {
                   fontSize: { xs: "1.25rem", sm: "1.5rem" },
                 }}
               >
-                Cultivos ({cultivos.length})
+                Cultivos ({cultivosOrdenados.length})
               </Typography>
             </Box>
-            <ListaCultivos
-              cultivos={cultivos}
-              expandedCultivo={expandedCultivo}
-              onCultivoChange={handleCultivoChange}
-            />
+            {ultimoCultivo ? (
+              <Box>
+                <Typography variant="h6" gutterBottom color="primary">
+                  Último Cultivo
+                </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Solicitado: {formatFecha(ultimoCultivo.fecha_solicitud)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Recibido:{" "}
+                  {ultimoCultivo.fecha_recibido
+                    ? formatFecha(ultimoCultivo.fecha_recibido)
+                    : "Pendiente"}
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
+                >
+                  <strong>Resultado:</strong> {ultimoCultivo.resultado}
+                </Typography>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() =>
+                    navigate(`/cultivos?pacienteId=${paciente.id}`)
+                  }
+                  startIcon={<ScienceIcon />}
+                >
+                  Ver Todos los Cultivos
+                </Button>
+              </Box>
+            ) : (
+              <Box sx={{ textAlign: "center" }}>
+                <ScienceIcon
+                  sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+                />
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  No hay cultivos
+                </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Este paciente no tiene cultivos registrados.
+                </Typography>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() =>
+                    navigate(`/cultivos?pacienteId=${paciente.id}`)
+                  }
+                  startIcon={<ScienceIcon />}
+                >
+                  Ver Cultivos
+                </Button>
+              </Box>
+            )}
           </Paper>
         </Grid>
 
@@ -376,11 +402,50 @@ const DetallePaciente: React.FC = () => {
                 Pases Médicos ({pases.length})
               </Typography>
             </Box>
-            <ListaPases
-              expandedPase={expandedPase}
-              onPaseChange={handlePaseChange}
-              pases={pases}
-            />
+            {ultimoPase ? (
+              <Box>
+                <Typography variant="h6" gutterBottom color="primary">
+                  Último Pase Médico
+                </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  {formatFecha(ultimoPase.fecha_creacion)}
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
+                >
+                  {ultimoPase.principal || "Sin diagnóstico principal"}
+                </Typography>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => navigate(`/pases?pacienteId=${paciente.id}`)}
+                  startIcon={<AssignmentIcon />}
+                >
+                  Ver Todos los Pases
+                </Button>
+              </Box>
+            ) : (
+              <Box sx={{ textAlign: "center" }}>
+                <AssignmentIcon
+                  sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+                />
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  No hay pases médicos
+                </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Este paciente no tiene pases médicos registrados.
+                </Typography>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => navigate(`/pases?pacienteId=${paciente.id}`)}
+                  startIcon={<AssignmentIcon />}
+                >
+                  Ver Pases
+                </Button>
+              </Box>
+            )}
           </Paper>
         </Grid>
       </Grid>

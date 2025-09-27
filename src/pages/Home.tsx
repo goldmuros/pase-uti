@@ -2,7 +2,6 @@ import {
   Assignment as AssignmentIcon,
   LocalHospital as HospitalIcon,
   Person as PersonIcon,
-  Science as ScienceIcon,
 } from "@mui/icons-material";
 import {
   Box,
@@ -49,17 +48,6 @@ const Home = () => {
       description:
         "Crea y gestiona pases médicos con diagnósticos y tratamientos detallados.",
       path: "/pases",
-    },
-    {
-      icon: (
-        <ScienceIcon
-          sx={{ fontSize: { xs: 40, sm: 48 }, color: "primary.main" }}
-        />
-      ),
-      title: "Cultivos y Laboratorios",
-      description:
-        "Registra y monitorea resultados de cultivos y estudios de laboratorio.",
-      path: "/cultivos",
     },
   ];
 

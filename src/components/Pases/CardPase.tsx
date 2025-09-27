@@ -4,20 +4,19 @@ import {
   CalendarToday as CalendarIcon,
   ExpandMore as ExpandMoreIcon,
   History as HistoryIcon,
-  Person as PersonIcon,
 } from "@mui/icons-material";
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Box,
+  Button,
   Card,
   CardContent,
   CardHeader,
   Chip,
   Divider,
   Grid,
-  IconButton,
   Paper,
   Tooltip,
   Typography,
@@ -77,11 +76,6 @@ const CardPase = ({
     <Card sx={{ borderRadius: 2, boxShadow: 2, maxWidth: 500 }}>
       {/* Header del paciente */}
       <CardHeader
-        avatar={
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <PersonIcon color="primary" />
-          </Box>
-        }
         title={
           <Box
             sx={{
@@ -127,7 +121,7 @@ const CardPase = ({
                 color="text.secondary"
                 sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
               >
-                Cama: {pasePaciente.paciente.cama_id || "No asignada"}
+                Cama: {pasePaciente.paciente.cama || "No asignada"}
               </Typography>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -148,12 +142,13 @@ const CardPase = ({
         }
         action={
           <Tooltip title="Ver detalle del paciente">
-            <IconButton
+            <Button
               onClick={() => handleVerDetallePaciente(pasePaciente.paciente.id)}
               color="primary"
+              variant="contained"
             >
-              <PersonIcon />
-            </IconButton>
+              Ver paciente
+            </Button>
           </Tooltip>
         }
         sx={{ pb: 1 }}

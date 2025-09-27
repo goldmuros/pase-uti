@@ -21,11 +21,14 @@ import {
   Grid,
   Paper,
   Skeleton,
+  Tab,
+  Tabs,
   Tooltip,
   Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePacientesData } from "../hooks/usePacienteData";
 
@@ -37,6 +40,7 @@ const ListaPacientes: React.FC = () => {
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   const { pacientes, isLoading, error } = usePacientesData();
+  const [tabValue, setTabValue] = useState(0);
 
   const irDetallePaciente = (pacienteId: string) => {
     navigate(`/pacientes/${pacienteId}`);
@@ -252,260 +256,237 @@ const ListaPacientes: React.FC = () => {
         </Paper>
       ) : (
         <>
-          {/* Pacientes Activos */}
-          {pacientesActivos.length > 0 && (
-            <>
-              <Typography
-                variant={isMobile ? "h6" : "h5"}
-                sx={{
-                  mb: { xs: 2, sm: 3 },
-                  fontWeight: "bold",
-                  color: "primary.main",
-                  fontSize: { xs: "1.25rem", sm: "1.5rem" },
-                }}
-              >
-                Pacientes Activos ({pacientesActivos.length})
-              </Typography>
-              <Grid
-                container
-                spacing={{ xs: 2, sm: 3 }}
-                sx={{ mb: { xs: 3, sm: 4 } }}
-              >
-                {pacientesActivos.map(paciente => (
-                  <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={paciente.id}>
-                    <Card
-                      elevation={2}
-                      sx={{
-                        cursor: "pointer",
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        borderRadius: 2,
-                        "&:hover": {
-                          boxShadow: 4,
-                          transform: "translateY(-2px)",
-                          transition: "all 0.2s ease-in-out",
-                        },
-                      }}
-                      onClick={() => irDetallePaciente(paciente.id)}
-                    >
-                      <CardHeader
-                        avatar={
-                          <Box sx={{ display: "flex", alignItems: "center" }}>
-                            <PersonIcon color="primary" />
-                          </Box>
-                        }
-                        title={
-                          <Box
+          <Tabs
+            value={tabValue}
+            onChange={(event, newValue) => setTabValue(newValue)}
+            sx={{ mb: { xs: 2, sm: 3 } }}
+          >
+            <Tab label={`Activos (${pacientesActivos.length})`} />
+            <Tab label={`Inactivos (${pacientesInactivos.length})`} />
+          </Tabs>
+
+          {tabValue === 0 && pacientesActivos.length > 0 && (
+            <Grid container spacing={{ xs: 2, sm: 3 }}>
+              {pacientesActivos.map(paciente => (
+                <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={paciente.id}>
+                  <Card
+                    elevation={2}
+                    sx={{
+                      cursor: "pointer",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      borderRadius: 2,
+                      "&:hover": {
+                        boxShadow: 4,
+                        transform: "translateY(-2px)",
+                        transition: "all 0.2s ease-in-out",
+                      },
+                    }}
+                    onClick={() => irDetallePaciente(paciente.id)}
+                  >
+                    <CardHeader
+                      avatar={
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <PersonIcon color="primary" />
+                        </Box>
+                      }
+                      title={
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <Typography
+                            variant={isMobile ? "body1" : "h6"}
+                            sx={{ fontWeight: "bold" }}
+                          >
+                            <BedIcon fontSize="small" sx={{ mr: 1 }} />
+                            {paciente.cama
+                              ? (() => {
+                                  const cama = mockCamas.find(
+                                    c => c.id === paciente.cama
+                                  );
+                                  return cama
+                                    ? `Cama ${cama.numero} (${cama.sala})`
+                                    : "Cama no asignada";
+                                })()
+                              : "Cama no asignada"}
+                          </Typography>
+                          <Chip
+                            size="small"
+                            label="Activo"
+                            color="success"
+                            variant="filled"
+                          />
+                        </Box>
+                      }
+                      subheader={
+                        <Box>
+                          <Typography
+                            variant="body1"
                             sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                              flexWrap: "wrap",
+                              fontWeight: "medium",
+                              mb: 0.5,
+                              fontSize: { xs: "0.875rem", sm: "1rem" },
                             }}
                           >
-                            <Typography
-                              variant={isMobile ? "body1" : "h6"}
-                              sx={{ fontWeight: "bold" }}
-                            >
-                              <BedIcon fontSize="small" sx={{ mr: 1 }} />
-                              {paciente.cama_id
-                                ? (() => {
-                                    const cama = mockCamas.find(
-                                      c => c.id === paciente.cama_id
-                                    );
-                                    return cama
-                                      ? `Cama ${cama.numero} (${cama.sala})`
-                                      : "Cama no asignada";
-                                  })()
-                                : "Cama no asignada"}
-                            </Typography>
-                            <Chip
-                              size="small"
-                              label="Activo"
-                              color="success"
-                              variant="filled"
-                            />
-                          </Box>
-                        }
-                        subheader={
-                          <Box>
-                            <Typography
-                              variant="body1"
-                              sx={{
-                                fontWeight: "medium",
-                                mb: 0.5,
-                                fontSize: { xs: "0.875rem", sm: "1rem" },
-                              }}
-                            >
-                              {paciente.nombre} {paciente.apellido}
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              sx={{
-                                fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                              }}
-                            >
-                              Ingreso: {formatFecha(paciente.fecha_ingreso)}
-                            </Typography>
-                          </Box>
-                        }
-                        sx={{ flexGrow: 1, pb: 1 }}
-                      />
-                      <CardActions
+                            {paciente.nombre} {paciente.apellido}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                            }}
+                          >
+                            Ingreso: {formatFecha(paciente.fecha_ingreso)}
+                          </Typography>
+                        </Box>
+                      }
+                      sx={{ flexGrow: 1, pb: 1 }}
+                    />
+                    <CardActions
+                      sx={{
+                        justifyContent: "space-between",
+                        px: 2,
+                        pb: 2,
+                        flexDirection: { xs: "column", sm: "row" },
+                        gap: { xs: 1, sm: 0 },
+                      }}
+                    >
+                      <Button
+                        size="small"
+                        color="primary"
+                        startIcon={<AssignmentIcon />}
+                        onClick={event => {
+                          event.stopPropagation();
+                          agregarPase(paciente.id, paciente.cama);
+                        }}
                         sx={{
-                          justifyContent: "space-between",
-                          px: 2,
-                          pb: 2,
-                          flexDirection: { xs: "column", sm: "row" },
-                          gap: { xs: 1, sm: 0 },
+                          borderRadius: 2,
+                          width: { xs: "100%", sm: "auto" },
+                          fontSize: { xs: "0.75rem", sm: "0.875rem" },
                         }}
                       >
-                        <Button
-                          size="small"
-                          color="primary"
-                          startIcon={<AssignmentIcon />}
-                          onClick={event => {
-                            event.stopPropagation();
-                            agregarPase(paciente.id, paciente.cama_id);
-                          }}
-                          sx={{
-                            borderRadius: 2,
-                            width: { xs: "100%", sm: "auto" },
-                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                          }}
-                        >
-                          Agregar Pase
-                        </Button>
-                        <Button
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                          startIcon={<ScienceIcon />}
-                          onClick={event => {
-                            event.stopPropagation();
-                            agregarCultivos(paciente.id, paciente.cama_id);
-                          }}
-                          sx={{
-                            borderRadius: 2,
-                            width: { xs: "100%", sm: "auto" },
-                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                          }}
-                        >
-                          Cultivos
-                        </Button>
-                      </CardActions>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </>
+                        Agregar Pase
+                      </Button>
+                      <Button
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                        startIcon={<ScienceIcon />}
+                        onClick={event => {
+                          event.stopPropagation();
+                          agregarCultivos(paciente.id, paciente.cama);
+                        }}
+                        sx={{
+                          borderRadius: 2,
+                          width: { xs: "100%", sm: "auto" },
+                          fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        }}
+                      >
+                        Cultivos
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
           )}
 
-          {/* Pacientes Inactivos */}
-          {pacientesInactivos.length > 0 && (
-            <>
-              <Typography
-                variant={isMobile ? "h6" : "h5"}
-                sx={{
-                  mb: { xs: 2, sm: 3 },
-                  fontWeight: "bold",
-                  color: "text.secondary",
-                  fontSize: { xs: "1.25rem", sm: "1.5rem" },
-                }}
-              >
-                Pacientes Inactivos ({pacientesInactivos.length})
-              </Typography>
-              <Grid container spacing={{ xs: 2, sm: 3 }}>
-                {pacientesInactivos.map(paciente => (
-                  <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={paciente.id}>
-                    <Card
-                      elevation={1}
-                      sx={{
-                        cursor: "pointer",
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        borderRadius: 2,
-                        opacity: 0.7,
-                        border: "2px dashed #ccc",
-                        "&:hover": {
-                          opacity: 0.9,
-                          boxShadow: 2,
-                        },
-                      }}
-                      onClick={() => irDetallePaciente(paciente.id)}
-                    >
-                      <CardHeader
-                        avatar={
-                          <Box sx={{ display: "flex", alignItems: "center" }}>
-                            <PersonIcon color="disabled" />
-                          </Box>
-                        }
-                        title={
-                          <Box
+          {tabValue === 1 && pacientesInactivos.length > 0 && (
+            <Grid container spacing={{ xs: 2, sm: 3 }}>
+              {pacientesInactivos.map(paciente => (
+                <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={paciente.id}>
+                  <Card
+                    elevation={1}
+                    sx={{
+                      cursor: "pointer",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      borderRadius: 2,
+                      opacity: 0.7,
+                      border: "2px dashed #ccc",
+                      "&:hover": {
+                        opacity: 0.9,
+                        boxShadow: 2,
+                      },
+                    }}
+                    onClick={() => irDetallePaciente(paciente.id)}
+                  >
+                    <CardHeader
+                      avatar={
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <PersonIcon color="disabled" />
+                        </Box>
+                      }
+                      title={
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <Typography
+                            variant={isMobile ? "body1" : "h6"}
+                            color="text.secondary"
+                          >
+                            <BedIcon fontSize="small" sx={{ mr: 1 }} />
+                            {paciente.cama
+                              ? (() => {
+                                  const cama = mockCamas.find(
+                                    c => c.id === paciente.cama
+                                  );
+                                  return cama
+                                    ? `Cama ${cama.numero} (${cama.sala})`
+                                    : "Cama no asignada";
+                                })()
+                              : "Cama no asignada"}
+                          </Typography>
+                          <Chip
+                            size="small"
+                            label="Inactivo"
+                            color="default"
+                            variant="outlined"
+                          />
+                        </Box>
+                      }
+                      subheader={
+                        <Box>
+                          <Typography
+                            variant="body1"
+                            color="text.secondary"
                             sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                              flexWrap: "wrap",
+                              mb: 0.5,
+                              fontSize: { xs: "0.875rem", sm: "1rem" },
                             }}
                           >
-                            <Typography
-                              variant={isMobile ? "body1" : "h6"}
-                              color="text.secondary"
-                            >
-                              <BedIcon fontSize="small" sx={{ mr: 1 }} />
-                              {paciente.cama_id
-                                ? (() => {
-                                    const cama = mockCamas.find(
-                                      c => c.id === paciente.cama_id
-                                    );
-                                    return cama
-                                      ? `Cama ${cama.numero} (${cama.sala})`
-                                      : "Cama no asignada";
-                                  })()
-                                : "Cama no asignada"}
-                            </Typography>
-                            <Chip
-                              size="small"
-                              label="Inactivo"
-                              color="default"
-                              variant="outlined"
-                            />
-                          </Box>
-                        }
-                        subheader={
-                          <Box>
-                            <Typography
-                              variant="body1"
-                              color="text.secondary"
-                              sx={{
-                                mb: 0.5,
-                                fontSize: { xs: "0.875rem", sm: "1rem" },
-                              }}
-                            >
-                              {paciente.nombre} {paciente.apellido}
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              color="text.disabled"
-                              sx={{
-                                fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                              }}
-                            >
-                              Ingreso: {formatFecha(paciente.fecha_ingreso)}
-                            </Typography>
-                          </Box>
-                        }
-                        sx={{ flexGrow: 1 }}
-                      />
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </>
+                            {paciente.nombre} {paciente.apellido}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="text.disabled"
+                            sx={{
+                              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                            }}
+                          >
+                            Ingreso: {formatFecha(paciente.fecha_ingreso)}
+                          </Typography>
+                        </Box>
+                      }
+                      sx={{ flexGrow: 1 }}
+                    />
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
           )}
         </>
       )}
