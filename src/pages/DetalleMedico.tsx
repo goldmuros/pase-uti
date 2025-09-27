@@ -6,6 +6,7 @@ import {
   Save as SaveIcon,
   Warning as WarningIcon,
 } from "@mui/icons-material";
+import type { SelectChangeEvent } from "@mui/material";
 import {
   Alert,
   Box,
@@ -87,14 +88,29 @@ const DetalleMedico: React.FC = () => {
     }
   };
 
-  const handleChange =
+  const handleTextChange =
     (field: keyof Omit<Medico, "id" | "created_at" | "updated_at">) =>
-    (event: any) => {
+    (event: React.ChangeEvent<HTMLInputElement>) => {
       if (editData) {
-        const value =
-          event.target.type === "checkbox"
-            ? event.target.checked
-            : event.target.value;
+        const value = event.target.value;
+        setEditData(prev => (prev ? { ...prev, [field]: value } : null));
+      }
+    };
+
+  const handleSelectChange =
+    (field: keyof Omit<Medico, "id" | "created_at" | "updated_at">) =>
+    (event: SelectChangeEvent<unknown>) => {
+      if (editData) {
+        const value = event.target.value;
+        setEditData(prev => (prev ? { ...prev, [field]: value } : null));
+      }
+    };
+
+  const handleCheckboxChange =
+    (field: keyof Omit<Medico, "id" | "created_at" | "updated_at">) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (editData) {
+        const value = event.target.checked;
         setEditData(prev => (prev ? { ...prev, [field]: value } : null));
       }
     };
@@ -217,14 +233,14 @@ const DetalleMedico: React.FC = () => {
                   fullWidth
                   label="Nombre"
                   value={editData?.nombre || ""}
-                  onChange={handleChange("nombre")}
+                  onChange={handleTextChange("nombre")}
                   sx={{ flex: 1, minWidth: 250 }}
                 />
                 <TextField
                   fullWidth
                   label="Apellido"
                   value={editData?.apellido || ""}
-                  onChange={handleChange("apellido")}
+                  onChange={handleTextChange("apellido")}
                   sx={{ flex: 1, minWidth: 250 }}
                 />
               </Box>
@@ -233,7 +249,7 @@ const DetalleMedico: React.FC = () => {
                 <Select
                   value={editData?.rol_id || ""}
                   label="Rol"
-                  onChange={handleChange("rol_id")}
+                  onChange={handleSelectChange("rol_id")}
                 >
                   {mockRoles.map(r => (
                     <MenuItem key={r.id} value={r.id}>
@@ -246,7 +262,7 @@ const DetalleMedico: React.FC = () => {
                 control={
                   <Checkbox
                     checked={editData?.activo || false}
-                    onChange={handleChange("activo")}
+                    onChange={handleCheckboxChange("activo")}
                   />
                 }
                 label="Médico Activo"
