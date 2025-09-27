@@ -25,6 +25,8 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { mockCultivos } from "../mock/cultivos";
+import { mockPacientes } from "../mock/pacientes";
+import { mockPases } from "../mock/pases";
 import type { Cultivos } from "../types/Cultivos";
 
 // Tipos para el estado del componente
@@ -82,8 +84,24 @@ const ListaCultivos: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+  const pacienteId = new URLSearchParams(window.location.search).get(
+    "pacienteId"
+  );
 
   const { cultivos, isLoading, error } = useCultivosData();
+
+  // Filtrar por paciente si se proporciona pacienteId
+  const cultivosFiltrados = pacienteId
+    ? cultivos.filter(cultivo => {
+        const pase = mockPases.find(p => p.id === cultivo.pase_id);
+        return pase && pase.paciente_id === pacienteId;
+      })
+    : cultivos;
+
+  const pacienteFiltrado = pacienteId
+    ? mockPacientes.find(p => p.id === pacienteId)
+    : null;
 
   const agregarNuevoCultivo = () => {
     navigate("/cultivos/nuevo");
@@ -158,6 +176,7 @@ const ListaCultivos: React.FC = () => {
         position: "relative",
         width: "100%",
         maxWidth: "100% !important",
+        height: "100vh",
       }}
     >
       {/* Header - Responsive */}
@@ -181,7 +200,9 @@ const ListaCultivos: React.FC = () => {
           }}
         >
           <ScienceIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-          Gestión de Cultivos
+          {pacienteId && pacienteFiltrado
+            ? `Cultivos de ${pacienteFiltrado.nombre} ${pacienteFiltrado.apellido}`
+            : "Gestión de Cultivos"}
         </Typography>
       </Box>
 
@@ -205,7 +226,7 @@ const ListaCultivos: React.FC = () => {
               variant={isMobile ? "h5" : "h4"}
               sx={{ fontWeight: "bold" }}
             >
-              {cultivos.length}
+              {cultivosFiltrados.length}
             </Typography>
             <Typography
               variant="body2"
@@ -230,7 +251,7 @@ const ListaCultivos: React.FC = () => {
               sx={{ fontWeight: "bold" }}
             >
               {
-                cultivos.filter(
+                cultivosFiltrados.filter(
                   c => getEstadoCultivo(c.fecha_recibido).color === "success"
                 ).length
               }
@@ -257,7 +278,10 @@ const ListaCultivos: React.FC = () => {
               variant={isMobile ? "h5" : "h4"}
               sx={{ fontWeight: "bold" }}
             >
-              {cultivos.filter(c => c.resultado.includes("Sensible")).length}
+              {
+                cultivosFiltrados.filter(c => c.resultado.includes("Sensible"))
+                  .length
+              }
             </Typography>
             <Typography
               variant="body2"
@@ -269,7 +293,7 @@ const ListaCultivos: React.FC = () => {
         </Grid>
       </Grid>
 
-      {cultivos.length === 0 ? (
+      {cultivosFiltrados.length === 0 ? (
         <Paper sx={{ p: { xs: 3, sm: 4 }, textAlign: "center" }}>
           <ScienceIcon
             sx={{
@@ -296,7 +320,7 @@ const ListaCultivos: React.FC = () => {
         </Paper>
       ) : (
         <Grid container spacing={{ xs: 1, sm: 2, md: 3 }}>
-          {cultivos.map(cultivo => {
+          {cultivosFiltrados.map(cultivo => {
             const estado = getEstadoCultivo(cultivo.fecha_recibido);
             return (
               <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={cultivo.id}>

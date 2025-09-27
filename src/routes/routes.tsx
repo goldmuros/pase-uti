@@ -1,5 +1,6 @@
 import ListaCultivos from "@/pages/ListaCultivos";
 import NuevoCultivo from "@/pages/NuevoCultivo";
+import NuevoPaciente from "@/pages/NuevoPaciente";
 import NuevoPase from "@/pages/NuevoPase";
 import DetallePaciente from "../pages/DetallePaciente";
 import ErrorBoundary from "../pages/ErrorBoundary";
@@ -30,6 +31,10 @@ const routes = [
           {
             index: true,
             element: <ListaPacientes />,
+          },
+          {
+            path: "nuevo",
+            element: <NuevoPaciente />,
           },
           {
             path: ":id", // Esto crea la ruta /pacientes/:id

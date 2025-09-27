@@ -2,6 +2,7 @@ import CardPase from "@/components/Pases/CardPase";
 import { mockPacientes } from "@/mock/pacientes";
 import { mockPases } from "@/mock/pases";
 import {
+  Add as AddIcon,
   ArrowBack as ArrowBackIcon,
   Assignment as AssignmentIcon,
   Warning as WarningIcon,
@@ -9,8 +10,8 @@ import {
 import {
   Alert,
   Box,
-  Button,
   Container,
+  Fab,
   Grid,
   IconButton,
   Paper,
@@ -122,8 +123,20 @@ const ListaPases: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const pacienteId = new URLSearchParams(window.location.search).get(
+    "pacienteId"
+  );
 
   const { pasesPorPaciente, isLoading, error } = usePasesAgrupadosData();
+
+  // Filtrar por paciente si se proporciona pacienteId
+  const pasesFiltrados = pacienteId
+    ? pasesPorPaciente.filter(item => item.paciente.id === pacienteId)
+    : pasesPorPaciente;
+
+  const pacienteFiltrado = pacienteId
+    ? mockPacientes.find(p => p.id === pacienteId)
+    : null;
 
   // const cultivos = mockCultivos.filter(
   //   cultivo => cultivo.pacienteId === pacienteId
@@ -175,7 +188,7 @@ const ListaPases: React.FC = () => {
     );
   }
 
-  const totalPases = pasesPorPaciente.reduce(
+  const totalPases = pasesFiltrados.reduce(
     (sum, item) => sum + item.pases.length,
     0
   );
@@ -188,6 +201,7 @@ const ListaPases: React.FC = () => {
         position: "relative",
         width: "100%",
         maxWidth: "100% !important",
+        height: "100vh",
       }}
     >
       {/* Header con botón de regreso - Responsive */}
@@ -218,21 +232,15 @@ const ListaPases: React.FC = () => {
           }}
         >
           <AssignmentIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-          Pases Médicos por Paciente
+          {pacienteId && pacienteFiltrado
+            ? `Pases Médicos de ${pacienteFiltrado.nombre} ${pacienteFiltrado.apellido}`
+            : "Pases Médicos por Paciente"}
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => navigate("/pases/nuevo")}
-          sx={{ ml: 2 }}
-        >
-          Nuevo Pase
-        </Button>
       </Box>
 
       {/* Estadísticas - Responsive */}
       <Grid container spacing={{ xs: 1, sm: 2 }}>
-        <Grid sx={{ xs: 12, sm: 4 }}>
+        <Grid sx={{ xs: 12, sm: 4, mb: { xs: 2, sm: 3 } }}>
           <Paper
             sx={{
               p: { xs: 1.5, sm: 2 },
@@ -246,13 +254,13 @@ const ListaPases: React.FC = () => {
               variant={isMobile ? "h5" : "h4"}
               sx={{ fontWeight: "bold" }}
             >
-              {pasesPorPaciente.length}
+              {pasesFiltrados.length}
             </Typography>
             <Typography
               variant="body2"
               sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
             >
-              Pacientes con Pases
+              {pacienteId ? "Paciente" : "Pacientes con Pases"}
             </Typography>
           </Paper>
         </Grid>
@@ -261,7 +269,7 @@ const ListaPases: React.FC = () => {
             sx={{
               p: { xs: 1.5, sm: 2 },
               textAlign: "center",
-              backgroundColor: "success.main",
+              backgroundColor: "text.secondary",
               color: "white",
               borderRadius: 2,
             }}
@@ -285,7 +293,7 @@ const ListaPases: React.FC = () => {
             sx={{
               p: { xs: 1.5, sm: 2 },
               textAlign: "center",
-              backgroundColor: "secondary.main",
+              backgroundColor: "success.main",
               color: "white",
               borderRadius: 2,
             }}
@@ -294,7 +302,9 @@ const ListaPases: React.FC = () => {
               variant={isMobile ? "h5" : "h4"}
               sx={{ fontWeight: "bold" }}
             >
-              {Math.round((totalPases / pasesPorPaciente.length) * 10) / 10}
+              {pasesFiltrados.length > 0
+                ? Math.round((totalPases / pasesFiltrados.length) * 10) / 10
+                : 0}
             </Typography>
             <Typography
               variant="body2"
@@ -306,7 +316,7 @@ const ListaPases: React.FC = () => {
         </Grid>
       </Grid>
 
-      {pasesPorPaciente.length === 0 ? (
+      {pasesFiltrados.length === 0 ? (
         <Paper
           sx={{ p: { xs: 3, sm: 4 }, textAlign: "center", borderRadius: 2 }}
         >
@@ -326,13 +336,34 @@ const ListaPases: React.FC = () => {
         </Paper>
       ) : (
         <Grid container spacing={{ xs: 2, sm: 3 }}>
-          {pasesPorPaciente.map(item => (
-            <Grid sx={{ xs: 12, sm: 6, md: 6 }} key={item.paciente.id}>
+          {pasesFiltrados.map(item => (
+            <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={item.paciente.id}>
               <CardPase pasePaciente={item} />
             </Grid>
           ))}
         </Grid>
       )}
+
+      {/* Botón flotante para agregar pase - Responsive */}
+      <Tooltip title="Agregar nuevo pase">
+        <Fab
+          color="primary"
+          aria-label="add"
+          onClick={() => navigate("/pases/nuevo")}
+          sx={{
+            position: "fixed",
+            bottom: { xs: 16, sm: 24 },
+            right: { xs: 16, sm: 24 },
+            boxShadow: 4,
+            width: { xs: 48, sm: 56 },
+            height: { xs: 48, sm: 56 },
+            zIndex: theme.zIndex.speedDial,
+          }}
+          size={isMobile ? "medium" : "large"}
+        >
+          <AddIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+        </Fab>
+      </Tooltip>
     </Container>
   );
 };
