@@ -52,37 +52,14 @@ CREATE POLICY "Allow admins to manage medicos" ON medicos
   );
 ```
 
-### 3. Camas Table
-
-```sql
-CREATE TABLE camas (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  numero VARCHAR(10) UNIQUE NOT NULL,
-  sala VARCHAR(50) DEFAULT 'UTI',
-  ocupada BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Enable RLS
-ALTER TABLE camas ENABLE ROW LEVEL SECURITY;
-
--- Policy: Allow authenticated users to read camas
-CREATE POLICY "Allow authenticated users to read camas" ON camas
-  FOR SELECT USING (auth.role() = 'authenticated');
-
--- Policy: Allow medicos to update camas
-CREATE POLICY "Allow medicos to update camas" ON camas
-  FOR UPDATE USING (auth.role() = 'authenticated');
-```
-
-### 4. Pacientes Table
+### 3. Pacientes Table
 
 ```sql
 CREATE TABLE pacientes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   nombre TEXT NOT NULL, -- Encrypted in production
   apellido TEXT NOT NULL, -- Encrypted in production
-  cama_id UUID REFERENCES camas(id) ON DELETE SET NULL,
+  cama VARCHAR(50),
   motivo_ingreso TEXT,
   activo BOOLEAN DEFAULT TRUE,
   fecha_ingreso TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -112,7 +89,6 @@ CREATE TABLE pases (
   principal TEXT,
   antecedentes TEXT,
   gcs_rass VARCHAR(50),
-  cultivos_id UUID REFERENCES cultivos(id) ON DELETE SET NULL,
   atb TEXT,
   vc_cook TEXT,
   actualmente TEXT,
@@ -132,7 +108,7 @@ CREATE POLICY "Allow medicos to manage pases" ON pases
   FOR ALL USING (auth.role() = 'authenticated');
 ```
 
-### 6. Cultivos Table
+### 4. Cultivos Table
 
 ```sql
 CREATE TABLE cultivos (
@@ -161,10 +137,8 @@ CREATE POLICY "Allow medicos to manage cultivos" ON cultivos
 ```sql
 -- Indexes for foreign keys
 CREATE INDEX idx_medicos_rol_id ON medicos(rol_id);
-CREATE INDEX idx_pacientes_cama_id ON pacientes(cama_id);
 CREATE INDEX idx_pases_paciente_id ON pases(paciente_id);
 CREATE INDEX idx_pases_medico_id ON pases(medico_id);
-CREATE INDEX idx_pases_cultivos_id ON pases(cultivos_id);
 CREATE INDEX idx_cultivos_pase_id ON cultivos(pase_id);
 
 -- Indexes for common queries
@@ -199,12 +173,4 @@ INSERT INTO roles (tipo_rol) VALUES
 ('Médico Jefe'),
 ('Residente'),
 ('Enfermero');
-
--- Insert camas
-INSERT INTO camas (numero, sala) VALUES
-('101', 'UTI-1'),
-('102', 'UTI-1'),
-('103', 'UTI-1'),
-('201', 'UTI-2'),
-('202', 'UTI-2');
 ```
