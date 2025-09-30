@@ -38,7 +38,7 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { usePacienteData } from "../hooks/usePacienteData";
+import { usePacienteDetalle } from "../hooks/usePacienteDetalle";
 import { mockPacientes } from "../mock/pacientes";
 import type { Paciente } from "../types/Paciente";
 
@@ -49,7 +49,8 @@ const DetallePaciente: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const { paciente, pases, cultivos, isLoading, error } = usePacienteData(id);
+  const { paciente, pases, cultivos, isLoading, error } =
+    usePacienteDetalle(id);
 
   // Estado para el diálogo de baja
   const [openDialog, setOpenDialog] = useState(false);

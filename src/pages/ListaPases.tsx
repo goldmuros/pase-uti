@@ -1,6 +1,6 @@
 import CardPase from "@/components/Pases/CardPase";
-import { mockPacientes } from "@/mock/pacientes";
-import { mockPases } from "@/mock/pases";
+import { usePacientes } from "@/hooks/usePacientes";
+import { usePases } from "@/hooks/usePases";
 import {
   Add as AddIcon,
   ArrowBack as ArrowBackIcon,
@@ -21,7 +21,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import type { Paciente } from "../types/Paciente";
 import type { Pase } from "../types/Pase";
@@ -34,88 +34,74 @@ export interface PasesPorPaciente {
   pasesAnteriores: Pase[];
 }
 
-// Tipos para el estado del componente
-interface ListaPasesState {
-  pasesPorPaciente: PasesPorPaciente[];
-  isLoading: boolean;
-  error: string | null;
-}
-
 // Hook personalizado para obtener pases agrupados por paciente
 const usePasesAgrupadosData = () => {
-  const [state, setState] = useState<ListaPasesState>({
-    pasesPorPaciente: [],
-    isLoading: true,
-    error: null,
+  const {
+    data: pases,
+    isLoading: isLoadingPases,
+    error: errorPases,
+  } = usePases();
+  const {
+    data: pacientes,
+    isLoading: isLoadingPacientes,
+    error: errorPacientes,
+  } = usePacientes();
+
+  const isLoading = isLoadingPases || isLoadingPacientes;
+  const error = errorPases || errorPacientes;
+
+  if (isLoading || error || !pases || !pacientes) {
+    return {
+      pasesPorPaciente: [],
+      isLoading,
+      error: error ? `Error al cargar los datos: ${error.message}` : null,
+    };
+  }
+
+  // Agrupar pases por paciente
+  const pasesAgrupados: { [pacienteId: string]: Pase[] } = {};
+
+  pases.forEach((pase: Pase) => {
+    if (!pasesAgrupados[pase.paciente_id]) {
+      pasesAgrupados[pase.paciente_id] = [];
+    }
+    pasesAgrupados[pase.paciente_id].push(pase);
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+  // Crear estructura final con información del paciente
+  const pasesPorPaciente: PasesPorPaciente[] = Object.entries(pasesAgrupados)
+    .map(([pacienteId, pasesList]) => {
+      const paciente = pacientes.find(p => p.id === pacienteId);
+      if (!paciente) return null;
 
-      try {
-        // Simular delay de API
-        await new Promise(resolve => setTimeout(resolve, 500));
+      // Ordenar pases por fecha descendente
+      const pasesOrdenados = pasesList.sort(
+        (a, b) =>
+          new Date(b.fecha_creacion).getTime() -
+          new Date(a.fecha_creacion).getTime()
+      );
 
-        // Agrupar pases por paciente
-        const pasesAgrupados: { [pacienteId: string]: Pase[] } = {};
+      return {
+        paciente,
+        pases: pasesOrdenados,
+        ultimoPase: pasesOrdenados[0],
+        pasesAnteriores: pasesOrdenados.slice(1),
+      };
+    })
+    .filter(Boolean) as PasesPorPaciente[];
 
-        mockPases.forEach((pase: Pase) => {
-          if (!pasesAgrupados[pase.paciente_id]) {
-            pasesAgrupados[pase.paciente_id] = [];
-          }
-          pasesAgrupados[pase.paciente_id].push(pase);
-        });
+  // Ordenar por fecha del último pase (más reciente primero)
+  const pasesPorPacienteOrdenados = pasesPorPaciente.sort(
+    (a, b) =>
+      new Date(b.ultimoPase.fecha_creacion).getTime() -
+      new Date(a.ultimoPase.fecha_creacion).getTime()
+  );
 
-        // Crear estructura final con información del paciente
-        const pasesPorPaciente: PasesPorPaciente[] = Object.entries(
-          pasesAgrupados
-        )
-          .map(([pacienteId, pases]) => {
-            const paciente = mockPacientes.find(p => p.id === pacienteId);
-            if (!paciente) return null;
-
-            // Ordenar pases por fecha descendente
-            const pasesOrdenados = pases.sort(
-              (a, b) =>
-                new Date(b.fecha_creacion).getTime() -
-                new Date(a.fecha_creacion).getTime()
-            );
-
-            return {
-              paciente,
-              pases: pasesOrdenados,
-              ultimoPase: pasesOrdenados[0],
-              pasesAnteriores: pasesOrdenados.slice(1),
-            };
-          })
-          .filter(Boolean) as PasesPorPaciente[];
-
-        // Ordenar por fecha del último pase (más reciente primero)
-        const pasesPorPacienteOrdenados = pasesPorPaciente.sort(
-          (a, b) =>
-            new Date(b.ultimoPase.fecha_creacion).getTime() -
-            new Date(a.ultimoPase.fecha_creacion).getTime()
-        );
-
-        setState({
-          pasesPorPaciente: pasesPorPacienteOrdenados,
-          isLoading: false,
-          error: null,
-        });
-      } catch (error) {
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: `Error al cargar los pases médicos: ${error instanceof Error ? error.message : String(error)}`,
-        }));
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  return state;
+  return {
+    pasesPorPaciente: pasesPorPacienteOrdenados,
+    isLoading: false,
+    error: null,
+  };
 };
 
 // Componente principal
@@ -127,6 +113,7 @@ const ListaPases: React.FC = () => {
     "pacienteId"
   );
 
+  const { data: pacientes } = usePacientes();
   const { pasesPorPaciente, isLoading, error } = usePasesAgrupadosData();
 
   // Filtrar por paciente si se proporciona pacienteId
@@ -135,7 +122,7 @@ const ListaPases: React.FC = () => {
     : pasesPorPaciente;
 
   const pacienteFiltrado = pacienteId
-    ? mockPacientes.find(p => p.id === pacienteId)
+    ? pacientes?.find(p => p.id === pacienteId)
     : null;
 
   // const cultivos = mockCultivos.filter(

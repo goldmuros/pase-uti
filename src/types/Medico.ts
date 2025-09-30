@@ -1,6 +1,5 @@
 export interface Medico {
   id: string;
-  rol_id: string;
   nombre: string;
   apellido: string;
   activo: boolean;

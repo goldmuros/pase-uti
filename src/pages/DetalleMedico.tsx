@@ -1,5 +1,8 @@
+import { useDeleteMedico, useUpdateMedico } from "@/hooks/useMedicos";
+import { useRoles } from "@/hooks/useRoles";
 import {
   ArrowBack as ArrowBackIcon,
+  Delete as DeleteIcon,
   Edit as EditIcon,
   LocalHospital as HospitalIcon,
   Person as PersonIcon,
@@ -15,6 +18,11 @@ import {
   CardContent,
   Checkbox,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   FormControl,
   FormControlLabel,
   IconButton,
@@ -32,8 +40,6 @@ import {
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMedicoData } from "../hooks/useMedicosData";
-import { mockMedicos } from "../mock/medicos";
-import { mockRoles } from "../mock/roles";
 import type { Medico } from "../types/Medico";
 
 // Componente principal
@@ -44,11 +50,15 @@ const DetalleMedico: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const { medico, isLoading, error } = useMedicoData(id);
+  const updateMedico = useUpdateMedico();
+  const deleteMedico = useDeleteMedico();
+  const { data: roles } = useRoles();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Omit<
     Medico,
     "id" | "created_at" | "updated_at"
   > | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleGoBack = () => {
     navigate(-1);
@@ -71,20 +81,26 @@ const DetalleMedico: React.FC = () => {
     setEditData(null);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (medico && editData) {
-      const index = mockMedicos.findIndex(m => m.id === medico.id);
-      if (index !== -1) {
-        mockMedicos[index] = {
-          ...medico,
-          ...editData,
-          updated_at: new Date().toISOString(),
-        };
+      try {
+        await updateMedico.mutateAsync({ id: medico.id, ...editData });
+        setIsEditing(false);
+        setEditData(null);
+      } catch (error) {
+        console.error("Error updating medico:", error);
       }
-      setIsEditing(false);
-      setEditData(null);
-      // In a real app, you'd refetch or update state
-      window.location.reload(); // Simple reload for demo
+    }
+  };
+
+  const handleDelete = async () => {
+    if (medico) {
+      try {
+        await deleteMedico.mutateAsync(medico.id);
+        navigate("/medicos");
+      } catch (error) {
+        console.error("Error deleting medico:", error);
+      }
     }
   };
 
@@ -165,7 +181,7 @@ const DetalleMedico: React.FC = () => {
     );
   }
 
-  const rol = mockRoles.find(r => r.id === medico.rol_id);
+  const rol = roles?.find(r => r.id === medico.rol_id);
 
   return (
     <Container
@@ -215,11 +231,21 @@ const DetalleMedico: React.FC = () => {
           </Typography>
         </Box>
         {!isEditing && (
-          <Tooltip title="Editar médico">
-            <IconButton onClick={handleEdit} color="primary">
-              <EditIcon />
-            </IconButton>
-          </Tooltip>
+          <>
+            <Tooltip title="Editar médico">
+              <IconButton onClick={handleEdit} color="primary">
+                <EditIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Eliminar médico">
+              <IconButton
+                onClick={() => setDeleteDialogOpen(true)}
+                color="error"
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
+          </>
         )}
       </Box>
 
@@ -251,7 +277,7 @@ const DetalleMedico: React.FC = () => {
                   label="Rol"
                   onChange={handleSelectChange("rol_id")}
                 >
-                  {mockRoles.map(r => (
+                  {roles?.map(r => (
                     <MenuItem key={r.id} value={r.id}>
                       {r.tipo_rol}
                     </MenuItem>
@@ -336,6 +362,37 @@ const DetalleMedico: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">
+          Confirmar Eliminación
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            ¿Estás seguro de que quieres eliminar al médico {medico?.nombre}{" "}
+            {medico?.apellido}? Esta acción no se puede deshacer.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleDelete}
+            color="error"
+            variant="contained"
+            disabled={deleteMedico.isPending}
+          >
+            {deleteMedico.isPending ? "Eliminando..." : "Eliminar"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

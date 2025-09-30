@@ -1,3 +1,4 @@
+import { usePase, useUpdatePase } from "@/hooks/usePases";
 import {
   ArrowBack as ArrowBackIcon,
   Assignment as AssignmentIcon,
@@ -23,7 +24,6 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { mockPases } from "../mock/pases";
 import type { Pase as IPase } from "../types/Pase";
 
 const defaultData: Omit<IPase, "id" | "fecha_creacion"> = {
@@ -45,6 +45,9 @@ const Pase = () => {
   const { id } = useParams(); // id is pase id
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const { data: pase, isLoading, error } = usePase(id || "");
+  const updatePase = useUpdatePase();
 
   const [formData, setFormData] = useState(defaultData);
   const [submitMessage, setSubmitMessage] = useState("");
@@ -71,34 +74,25 @@ const Pase = () => {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
-  // Función para generar un ID único
-  const generateId = () => {
-    return "pase_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-  };
-
   // Inicializar formulario
   useEffect(() => {
-    if (id) {
-      // Load existing pase
-      const existingPase = mockPases.find(p => p.id === id);
-      if (existingPase) {
-        setFormData({
-          paciente_id: existingPase.paciente_id,
-          medico_id: existingPase.medico_id,
-          principal: existingPase.principal,
-          antecedentes: existingPase.antecedentes,
-          gcs_rass: existingPase.gcs_rass,
-          cultivos_id: existingPase.cultivos_id,
-          atb: existingPase.atb,
-          vc_cook: existingPase.vc_cook,
-          actualmente: existingPase.actualmente,
-          pendientes: existingPase.pendientes,
-          fecha_modificacion: existingPase.fecha_modificacion,
-        });
-        setFechaCreacion(existingPase.fecha_creacion);
-        setIsEditing(true);
-      }
-    } else {
+    if (pase) {
+      setFormData({
+        paciente_id: pase.paciente_id,
+        medico_id: pase.medico_id,
+        principal: pase.principal,
+        antecedentes: pase.antecedentes,
+        gcs_rass: pase.gcs_rass,
+        cultivos_id: pase.cultivos_id,
+        atb: pase.atb,
+        vc_cook: pase.vc_cook,
+        actualmente: pase.actualmente,
+        pendientes: pase.pendientes,
+        fecha_modificacion: pase.fecha_modificacion,
+      });
+      setFechaCreacion(pase.fecha_creacion);
+      setIsEditing(true);
+    } else if (!id) {
       // New pase
       const currentTime = getCurrentDateTime();
       setFormData(prev => ({
@@ -107,7 +101,7 @@ const Pase = () => {
       }));
       setFechaCreacion(currentTime);
     }
-  }, [id, paciente.id]);
+  }, [pase, id, paciente.id]);
 
   // Manejar cambios en los campos
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,29 +130,28 @@ const Pase = () => {
         return;
       }
 
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Create new pase
-      const newPase: IPase = {
-        ...formData,
-        id: generateId(),
-        fecha_creacion: getCurrentDateTime(),
-        fecha_modificacion: getCurrentDateTime(),
-      };
-
-      // Add to mock data (in real app, this would be an API call)
-      mockPases.push(newPase);
-
-      setSubmitMessage("Pase médico creado exitosamente");
+      if (isEditing && id) {
+        // Update existing pase
+        await updatePase.mutateAsync({
+          id,
+          ...formData,
+          fecha_modificacion: getCurrentDateTime(),
+        });
+        setSubmitMessage("Pase médico actualizado exitosamente");
+      } else {
+        // This should not happen in this component, as new pases are created in NuevoPase
+        setSubmitMessage(
+          "Error: Esta página es solo para ver/editar pases existentes"
+        );
+      }
 
       // Opcional: redirigir después del éxito
       setTimeout(() => {
-        navigate(`/pacientes/${paciente.id}`);
+        navigate(`/pases`);
       }, 2000);
     } catch (error) {
       setSubmitMessage(
-        `Error al crear el pase médico: ${error instanceof Error ? error.message : String(error)}`
+        `Error al ${isEditing ? "actualizar" : "crear"} el pase médico: ${error instanceof Error ? error.message : String(error)}`
       );
     } finally {
       setIsSubmitting(false);
@@ -187,6 +180,27 @@ const Pase = () => {
       minute: "2-digit",
     });
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+        <Typography>Cargando pase médico...</Typography>
+      </Container>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert severity="error">Error al cargar el pase: {error.message}</Alert>
+        <Button onClick={handleGoBack} sx={{ mt: 2 }}>
+          Volver
+        </Button>
+      </Container>
+    );
+  }
 
   return (
     <Container

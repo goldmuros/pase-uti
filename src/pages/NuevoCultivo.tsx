@@ -1,4 +1,8 @@
+import { useCreateCultivo } from "@/hooks/useCultivos";
+import { usePacientes } from "@/hooks/usePacientes";
+import { usePases } from "@/hooks/usePases";
 import {
+  Alert,
   Box,
   Button,
   Container,
@@ -11,13 +15,12 @@ import {
 } from "@mui/material";
 import React, { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { mockCultivos } from "../mock/cultivos";
-import { mockPacientes } from "../mock/pacientes";
-import { mockPases } from "../mock/pases";
-import type { Cultivos } from "../types/Cultivos";
 
 const NuevoCultivo = (): ReactNode => {
   const navigate = useNavigate();
+  const createCultivo = useCreateCultivo();
+  const { data: pacientes } = usePacientes();
+  const { data: pases } = usePases();
   const [formData, setFormData] = useState<{
     paciente_id: string;
     fecha_solicitud: string;
@@ -41,30 +44,29 @@ const NuevoCultivo = (): ReactNode => {
       }));
     };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     // Find the corresponding pase for the selected paciente
-    const pase = mockPases.find(p => p.paciente_id === formData.paciente_id);
+    const pase = pases?.find(p => p.paciente_id === formData.paciente_id);
     if (!pase) {
       alert("No se encontró un pase activo para este paciente.");
       return;
     }
 
-    // Create new cultivo
-    const newCultivo: Cultivos = {
-      ...formData,
-      pase_id: pase.id,
-      fecha_recibido: formData.fecha_recibido || null,
-      id: `cult_${Date.now()}`,
-      created_at: new Date().toISOString(),
-    };
+    try {
+      await createCultivo.mutateAsync({
+        ...formData,
+        pase_id: pase.id,
+        fecha_recibido: formData.fecha_recibido || null,
+      });
 
-    // Add to mock data (in real app, this would be an API call)
-    mockCultivos.push(newCultivo);
-
-    // Navigate back to list
-    navigate("/cultivos");
+      // Navigate back to list on success
+      navigate("/cultivos");
+    } catch (error) {
+      console.error("Error creating cultivo:", error);
+      // Error is handled by the mutation
+    }
   };
 
   const handleCancel = () => {
@@ -77,26 +79,33 @@ const NuevoCultivo = (): ReactNode => {
         Crear Nuevo Cultivo
       </Typography>
 
+      {createCultivo.isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error al crear el cultivo: {createCultivo.error?.message}
+        </Alert>
+      )}
+
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
         <Box sx={{ mb: 3 }}>
           <FormControl fullWidth required>
             <InputLabel>Paciente</InputLabel>
             <Select
               value={formData.paciente_id}
-              onChange={() => handleChange("paciente_id")}
+              onChange={event =>
+                setFormData(prev => ({
+                  ...prev,
+                  paciente_id: event.target.value,
+                }))
+              }
               label="Paciente"
             >
-              {mockPacientes
-                .filter(p => p.activo)
-                .map(paciente => {
-                  const cama = paciente.cama;
-                  return (
-                    <MenuItem key={paciente.id} value={paciente.id}>
-                      {paciente.nombre} {paciente.apellido}
-                      {cama}
-                    </MenuItem>
-                  );
-                })}
+              {pacientes
+                ?.filter(p => p.activo)
+                .map(paciente => (
+                  <MenuItem key={paciente.id} value={paciente.id}>
+                    {paciente.nombre} {paciente.apellido} - Cama {paciente.cama}
+                  </MenuItem>
+                ))}
             </Select>
           </FormControl>
         </Box>
@@ -155,8 +164,13 @@ const NuevoCultivo = (): ReactNode => {
         </Box>
 
         <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
-          <Button type="submit" variant="contained" color="primary">
-            Crear Cultivo
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={createCultivo.isPending}
+          >
+            {createCultivo.isPending ? "Creando..." : "Crear Cultivo"}
           </Button>
           <Button variant="outlined" onClick={handleCancel}>
             Cancelar

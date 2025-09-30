@@ -1,14 +1,11 @@
-import type { SelectChangeEvent } from "@mui/material";
+import { useCreateMedico } from "@/hooks/useMedicos";
 import {
+  Alert,
   Box,
   Button,
   Checkbox,
   Container,
-  FormControl,
   FormControlLabel,
-  InputLabel,
-  MenuItem,
-  Select,
   TextField,
   Typography,
 } from "@mui/material";
@@ -19,18 +16,16 @@ import {
   type ReactNode,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { mockMedicos } from "../mock/medicos";
-import { mockRoles } from "../mock/roles";
 import type { Medico } from "../types/Medico";
 
 const NuevoMedico = (): ReactNode => {
   const navigate = useNavigate();
+  const createMedico = useCreateMedico();
   const [formData, setFormData] = useState<
     Omit<Medico, "id" | "created_at" | "updated_at">
   >({
     nombre: "",
     apellido: "",
-    rol_id: "",
     activo: true,
   });
 
@@ -47,30 +42,18 @@ const NuevoMedico = (): ReactNode => {
       }));
     };
 
-  const handleSelectChange =
-    (field: keyof typeof formData) => (event: SelectChangeEvent<unknown>) => {
-      setFormData(prev => ({
-        ...prev,
-        [field]: event.target.value,
-      }));
-    };
-
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
-    // Create new medico
-    const newMedico: Medico = {
-      ...formData,
-      id: `med_${Date.now()}`,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    try {
+      await createMedico.mutateAsync(formData);
 
-    // Add to mock data (in real app, this would be an API call)
-    mockMedicos.push(newMedico);
-
-    // Navigate back to list
-    navigate("/medicos");
+      // Navigate back to list on success
+      navigate("/medicos");
+    } catch (error) {
+      console.error("Error creating medico:", error);
+      // Error is handled by the mutation
+    }
   };
 
   const handleCancel = () => {
@@ -82,6 +65,12 @@ const NuevoMedico = (): ReactNode => {
       <Typography variant="h4" gutterBottom>
         Crear Nuevo Médico
       </Typography>
+
+      {createMedico.isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error al crear el médico: {createMedico.error?.message}
+        </Alert>
+      )}
 
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
         <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
@@ -107,23 +96,6 @@ const NuevoMedico = (): ReactNode => {
         </Box>
 
         <Box sx={{ mb: 3 }}>
-          <FormControl fullWidth required>
-            <InputLabel>Rol</InputLabel>
-            <Select
-              value={formData.rol_id}
-              label="Rol"
-              onChange={handleSelectChange("rol_id")}
-            >
-              {mockRoles.map(rol => (
-                <MenuItem key={rol.id} value={rol.id}>
-                  {rol.tipo_rol}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
-
-        <Box sx={{ mb: 3 }}>
           <FormControlLabel
             control={
               <Checkbox
@@ -136,8 +108,13 @@ const NuevoMedico = (): ReactNode => {
         </Box>
 
         <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
-          <Button type="submit" variant="contained" color="primary">
-            Crear Médico
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={createMedico.isPending}
+          >
+            {createMedico.isPending ? "Creando..." : "Crear Médico"}
           </Button>
           <Button variant="outlined" onClick={handleCancel}>
             Cancelar

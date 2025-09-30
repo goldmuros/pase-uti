@@ -1,3 +1,4 @@
+import { usePacientes } from "@/hooks/usePacientes";
 import {
   Add as AddIcon,
   Assignment as AssignmentIcon,
@@ -5,7 +6,6 @@ import {
   LocalHospital as HospitalIcon,
   Person as PersonIcon,
   Science as ScienceIcon,
-  Warning as WarningIcon,
 } from "@mui/icons-material";
 import {
   Alert,
@@ -29,7 +29,6 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { usePacientesData } from "../hooks/usePacienteData";
 
 // Componente principal
 const ListaPacientes: React.FC = () => {
@@ -37,18 +36,15 @@ const ListaPacientes: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const { pacientes, isLoading, error } = usePacientesData();
+  const { data: pacientes, isLoading, error } = usePacientes();
   const [tabValue, setTabValue] = useState(0);
 
   const irDetallePaciente = (pacienteId: string) => {
     navigate(`/pacientes/${pacienteId}`);
   };
 
-  const agregarPase = (
-    pacienteId: string,
-    camaId: string | null | undefined
-  ) => {
-    navigate(`/pases/nuevo?pacienteId=${pacienteId}&cama=${camaId || ""}`);
+  const agregarPase = (pacienteId: string) => {
+    navigate(`/pases/nuevo?pacienteId=${pacienteId}`);
   };
 
   const agregarCultivos = (pacienteId: string) => {
@@ -94,10 +90,6 @@ const ListaPacientes: React.FC = () => {
         sx={{ px: { xs: 0.5, sm: 1, md: 2, lg: 3 }, textAlign: "center" }}
       >
         <Alert severity="error" sx={{ mb: 2 }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            <WarningIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-            {error}
-          </Typography>
           <Typography variant="body2">
             No se pudieron cargar los pacientes.
           </Typography>
@@ -106,8 +98,8 @@ const ListaPacientes: React.FC = () => {
     );
   }
 
-  const pacientesActivos = pacientes.filter(p => p.activo);
-  const pacientesInactivos = pacientes.filter(p => !p.activo);
+  const pacientesActivos = pacientes?.filter(p => p.activo) ?? [];
+  const pacientesInactivos = pacientes?.filter(p => !p.activo) ?? [];
 
   return (
     <Container
@@ -212,7 +204,7 @@ const ListaPacientes: React.FC = () => {
               variant={isMobile ? "h5" : "h4"}
               sx={{ fontWeight: "bold" }}
             >
-              {pacientes.length}
+              {pacientes?.length ?? 0}
             </Typography>
             <Typography
               variant="body2"
@@ -224,7 +216,7 @@ const ListaPacientes: React.FC = () => {
         </Grid>
       </Grid>
 
-      {pacientes.length === 0 ? (
+      {pacientes?.length === 0 ? (
         <Paper sx={{ p: { xs: 3, sm: 4 }, textAlign: "center" }}>
           <PersonIcon
             sx={{
@@ -350,7 +342,7 @@ const ListaPacientes: React.FC = () => {
                         startIcon={<AssignmentIcon />}
                         onClick={event => {
                           event.stopPropagation();
-                          agregarPase(paciente.id, paciente.cama);
+                          agregarPase(paciente.id);
                         }}
                         sx={{
                           borderRadius: 2,

@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { mockCultivos } from "../mock/cultivos";
-import { mockPacientes } from "../mock/pacientes";
-import { mockPases } from "../mock/pases";
+import { supabase } from "../config/supabase";
 import type { Cultivos } from "../types/Cultivos";
 import type { Paciente } from "../types/Paciente";
 import type { Pase } from "../types/Pase";
@@ -23,7 +21,7 @@ export interface ListaPacientesState {
 }
 
 // Hook personalizado para obtener datos del paciente
-export const usePacienteData = (id: string) => {
+export const usePacienteDetalle = (id: string) => {
   const [state, setState] = useState<DetallePacienteState>({
     paciente: null,
     pases: [],
@@ -37,12 +35,14 @@ export const usePacienteData = (id: string) => {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
 
       try {
-        // Simular delay de API
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Get paciente
+        const { data: paciente, error: pacienteError } = await supabase
+          .from("pacientes")
+          .select("*")
+          .eq("id", id)
+          .single();
 
-        const paciente = mockPacientes.find(p => p.id === id);
-
-        if (!paciente) {
+        if (pacienteError || !paciente) {
           setState(prev => ({
             ...prev,
             isLoading: false,
@@ -51,27 +51,33 @@ export const usePacienteData = (id: string) => {
           return;
         }
 
-        const pasesPaciente = mockPases
-          .filter(pase => pase.paciente_id === id)
-          .sort(
-            (a, b) =>
-              new Date(b.fecha_creacion).getTime() -
-              new Date(a.fecha_creacion).getTime()
-          );
+        // Get pases for this paciente
+        const { data: pasesPaciente, error: pasesError } = await supabase
+          .from("pases")
+          .select("*")
+          .eq("paciente_id", id)
+          .order("fecha_creacion", { ascending: false });
 
-        const cultivosPaciente = mockCultivos
-          .filter(cultivo =>
-            pasesPaciente.some(pase => pase.id === cultivo.pase_id)
-          )
-          .sort(
-            (a, b) =>
-              new Date(b.fecha_recibido || "").getTime() -
-              new Date(a.fecha_recibido || "").getTime()
-          );
+        if (pasesError) throw pasesError;
+
+        // Get cultivos for these pases
+        const paseIds = pasesPaciente?.map(p => p.id) || [];
+        let cultivosPaciente: Cultivos[] = [];
+
+        if (paseIds.length > 0) {
+          const { data: cultivos, error: cultivosError } = await supabase
+            .from("cultivos")
+            .select("*")
+            .in("pase_id", paseIds)
+            .order("fecha_recibido", { ascending: false, nullsFirst: false });
+
+          if (cultivosError) throw cultivosError;
+          cultivosPaciente = cultivos || [];
+        }
 
         setState({
           paciente,
-          pases: pasesPaciente,
+          pases: pasesPaciente || [],
           cultivos: cultivosPaciente,
           isLoading: false,
           error: null,
@@ -106,18 +112,16 @@ export const usePacientesData = () => {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
 
       try {
-        // Simular delay de API
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Get all pacientes ordered by fecha_ingreso desc
+        const { data: pacientes, error } = await supabase
+          .from("pacientes")
+          .select("*")
+          .order("fecha_ingreso", { ascending: false });
 
-        // Ordenar pacientes por fecha de ingreso (más recientes primero)
-        const pacientesOrdenados = mockPacientes.sort(
-          (a, b) =>
-            new Date(b.fecha_ingreso).getTime() -
-            new Date(a.fecha_ingreso).getTime()
-        );
+        if (error) throw error;
 
         setState({
-          pacientes: pacientesOrdenados,
+          pacientes: pacientes || [],
           isLoading: false,
           error: null,
         });

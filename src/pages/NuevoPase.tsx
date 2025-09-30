@@ -1,5 +1,10 @@
+import { useCultivos } from "@/hooks/useCultivos";
+import { useMedicos } from "@/hooks/useMedicos";
+import { usePacientes } from "@/hooks/usePacientes";
+import { useCreatePase } from "@/hooks/usePases";
 import type { Pase } from "@/types/Pase";
 import {
+  Alert,
   Box,
   Button,
   Container,
@@ -12,13 +17,13 @@ import {
 } from "@mui/material";
 import React, { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { mockCultivos } from "../mock/cultivos";
-import { mockMedicos } from "../mock/medicos";
-import { mockPacientes } from "../mock/pacientes";
-import { mockPases } from "../mock/pases";
 
 const NuevoPase = (): ReactNode => {
   const navigate = useNavigate();
+  const createPase = useCreatePase();
+  const { data: pacientes } = usePacientes();
+  const { data: medicos } = useMedicos();
+  const { data: cultivos } = useCultivos();
   const [formData, setFormData] = useState<Omit<Pase, "id" | "fecha_creacion">>(
     {
       antecedentes: "",
@@ -44,22 +49,20 @@ const NuevoPase = (): ReactNode => {
       }));
     };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    // Create new pase
-    const newPase: Pase = {
-      ...formData,
-      id: Date.now().toString(),
-      fecha_creacion: new Date().toISOString(),
-      fecha_modificacion: new Date().toISOString(),
-    };
+    try {
+      await createPase.mutateAsync({
+        ...formData,
+      });
 
-    // Add to mock data (in real app, this would be an API call)
-    mockPases.push(newPase);
-
-    // Navigate back to list
-    navigate("/pases");
+      // Navigate back to list on success
+      navigate("/pases");
+    } catch (error) {
+      console.error("Error creating pase:", error);
+      // Error is handled by the mutation
+    }
   };
 
   const handleCancel = () => {
@@ -72,16 +75,27 @@ const NuevoPase = (): ReactNode => {
         Crear Nuevo Pase Médico
       </Typography>
 
+      {createPase.isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error al crear el pase: {createPase.error?.message}
+        </Alert>
+      )}
+
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
         <Box sx={{ mb: 3 }}>
           <FormControl fullWidth required>
             <InputLabel>Paciente</InputLabel>
             <Select
               value={formData.paciente_id}
-              onChange={() => handleChange("paciente_id")}
+              onChange={event =>
+                setFormData(prev => ({
+                  ...prev,
+                  paciente_id: event.target.value,
+                }))
+              }
               label="Paciente"
             >
-              {mockPacientes.map(paciente => (
+              {pacientes?.map(paciente => (
                 <MenuItem key={paciente.id} value={paciente.id}>
                   {paciente.nombre} {paciente.apellido}
                 </MenuItem>
@@ -95,10 +109,15 @@ const NuevoPase = (): ReactNode => {
             <InputLabel>Médico</InputLabel>
             <Select
               value={formData.medico_id}
-              onChange={() => handleChange("medico_id")}
+              onChange={event =>
+                setFormData(prev => ({
+                  ...prev,
+                  medico_id: event.target.value,
+                }))
+              }
               label="Médico"
             >
-              {mockMedicos.map(medico => (
+              {medicos?.map(medico => (
                 <MenuItem key={medico.id} value={medico.id}>
                   {medico.nombre} {medico.apellido}
                 </MenuItem>
@@ -112,13 +131,18 @@ const NuevoPase = (): ReactNode => {
             <InputLabel>Cultivos</InputLabel>
             <Select
               value={formData.cultivos_id}
-              onChange={() => handleChange("cultivos_id")}
+              onChange={event =>
+                setFormData(prev => ({
+                  ...prev,
+                  cultivos_id: event.target.value,
+                }))
+              }
               label="Cultivos"
             >
               <MenuItem value="">
                 <em>Ninguno</em>
               </MenuItem>
-              {mockCultivos.map(cultivo => (
+              {cultivos?.map(cultivo => (
                 <MenuItem key={cultivo.id} value={cultivo.id}>
                   {cultivo.nombre}
                 </MenuItem>
@@ -202,8 +226,13 @@ const NuevoPase = (): ReactNode => {
         </Box>
 
         <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
-          <Button type="submit" variant="contained" color="primary">
-            Crear Pase
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={createPase.isPending}
+          >
+            {createPase.isPending ? "Creando..." : "Crear Pase"}
           </Button>
           <Button variant="outlined" onClick={handleCancel}>
             Cancelar

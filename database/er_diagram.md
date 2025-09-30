@@ -34,7 +34,7 @@ erDiagram
         uuid id PK
         text nombre
         text apellido
-        uuid cama_id FK
+        uuid cama FK
         text motivo_ingreso
         boolean activo
         timestamp fecha_ingreso

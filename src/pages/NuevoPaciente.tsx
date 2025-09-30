@@ -1,4 +1,6 @@
+import { useCreatePaciente } from "@/hooks/usePacientes";
 import {
+  Alert,
   Box,
   Button,
   Checkbox,
@@ -14,11 +16,11 @@ import {
   type ReactNode,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { mockPacientes } from "../mock/pacientes";
 import type { Paciente } from "../types/Paciente";
 
 const NuevoPaciente = (): ReactNode => {
   const navigate = useNavigate();
+  const createPaciente = useCreatePaciente();
   const [formData, setFormData] = useState<
     Omit<Paciente, "id" | "created_at" | "updated_at">
   >({
@@ -44,23 +46,21 @@ const NuevoPaciente = (): ReactNode => {
       }));
     };
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
-    // Create new paciente
-    const newPaciente: Paciente = {
-      ...formData,
-      id: Date.now().toString(),
-      fecha_ingreso: new Date(formData.fecha_ingreso).toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    try {
+      await createPaciente.mutateAsync({
+        ...formData,
+        fecha_ingreso: new Date(formData.fecha_ingreso).toISOString(),
+      });
 
-    // Add to mock data (in real app, this would be an API call)
-    mockPacientes.push(newPaciente);
-
-    // Navigate back to list
-    navigate("/pacientes");
+      // Navigate back to list on success
+      navigate("/pacientes");
+    } catch (error) {
+      console.error("Error creating paciente:", error);
+      // Error is handled by the mutation
+    }
   };
 
   const handleCancel = () => {
@@ -79,6 +79,12 @@ const NuevoPaciente = (): ReactNode => {
       >
         Crear Nuevo Paciente
       </Typography>
+
+      {createPaciente.isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error al crear el paciente: {createPaciente.error?.message}
+        </Alert>
+      )}
 
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
         <Box
@@ -119,7 +125,6 @@ const NuevoPaciente = (): ReactNode => {
             label="Cama"
             value={formData.cama}
             onChange={handleChange("cama")}
-            required
             size="small"
             sx={{ maxWidth: { xs: "100%", sm: 200 } }}
           />
@@ -180,9 +185,10 @@ const NuevoPaciente = (): ReactNode => {
             variant="contained"
             color="primary"
             fullWidth
+            disabled={createPaciente.isPending}
             sx={{ order: { xs: 2, sm: 1 } }}
           >
-            Crear Paciente
+            {createPaciente.isPending ? "Creando..." : "Crear Paciente"}
           </Button>
           <Button
             variant="outlined"
