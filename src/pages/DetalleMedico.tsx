@@ -1,15 +1,12 @@
 import { useDeleteMedico, useUpdateMedico } from "@/hooks/useMedicos";
-import { useRoles } from "@/hooks/useRoles";
 import {
   ArrowBack as ArrowBackIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
-  LocalHospital as HospitalIcon,
   Person as PersonIcon,
   Save as SaveIcon,
   Warning as WarningIcon,
 } from "@mui/icons-material";
-import type { SelectChangeEvent } from "@mui/material";
 import {
   Alert,
   Box,
@@ -23,13 +20,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  FormControl,
   FormControlLabel,
   IconButton,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
   Skeleton,
   TextField,
   Tooltip,
@@ -52,7 +44,6 @@ const DetalleMedico: React.FC = () => {
   const { medico, isLoading, error } = useMedicoData(id);
   const updateMedico = useUpdateMedico();
   const deleteMedico = useDeleteMedico();
-  const { data: roles } = useRoles();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Omit<
     Medico,
@@ -69,7 +60,6 @@ const DetalleMedico: React.FC = () => {
       setEditData({
         nombre: medico.nombre,
         apellido: medico.apellido,
-        rol_id: medico.rol_id,
         activo: medico.activo,
       });
       setIsEditing(true);
@@ -107,15 +97,6 @@ const DetalleMedico: React.FC = () => {
   const handleTextChange =
     (field: keyof Omit<Medico, "id" | "created_at" | "updated_at">) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (editData) {
-        const value = event.target.value;
-        setEditData(prev => (prev ? { ...prev, [field]: value } : null));
-      }
-    };
-
-  const handleSelectChange =
-    (field: keyof Omit<Medico, "id" | "created_at" | "updated_at">) =>
-    (event: SelectChangeEvent<unknown>) => {
       if (editData) {
         const value = event.target.value;
         setEditData(prev => (prev ? { ...prev, [field]: value } : null));
@@ -180,8 +161,6 @@ const DetalleMedico: React.FC = () => {
       </Container>
     );
   }
-
-  const rol = roles?.find(r => r.id === medico.rol_id);
 
   return (
     <Container
@@ -270,20 +249,6 @@ const DetalleMedico: React.FC = () => {
                   sx={{ flex: 1, minWidth: 250 }}
                 />
               </Box>
-              <FormControl fullWidth>
-                <InputLabel>Rol</InputLabel>
-                <Select
-                  value={editData?.rol_id || ""}
-                  label="Rol"
-                  onChange={handleSelectChange("rol_id")}
-                >
-                  {roles?.map(r => (
-                    <MenuItem key={r.id} value={r.id}>
-                      {r.tipo_rol}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -316,25 +281,6 @@ const DetalleMedico: React.FC = () => {
                   alignItems: "center",
                 }}
               >
-                <Paper
-                  sx={{
-                    p: 2,
-                    textAlign: "center",
-                    backgroundColor: "primary.main",
-                    color: "white",
-                    borderRadius: 2,
-                    flex: 1,
-                    minWidth: 200,
-                  }}
-                >
-                  <HospitalIcon sx={{ fontSize: { xs: 28, sm: 32 }, mb: 1 }} />
-                  <Typography
-                    variant={isMobile ? "h6" : "h5"}
-                    sx={{ fontWeight: "bold" }}
-                  >
-                    {rol?.tipo_rol || "Rol no encontrado"}
-                  </Typography>
-                </Paper>
                 <Box sx={{ flex: 1, minWidth: 200 }}>
                   <Typography variant="h6" gutterBottom>
                     Estado
