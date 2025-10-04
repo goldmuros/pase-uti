@@ -46,11 +46,8 @@ jobs:
 
       - name: Clean and Install dependencies
         run: |
-          echo "🧹 Cleaning npm cache..."
-          npm cache clean --force
-          echo ""
-          echo "📦 Installing dependencies..."
-          npm install --verbose
+          echo "📦 Installing dependencies with devDependencies..."
+          NODE_ENV=development npm install
           echo ""
           echo "✅ Installation complete"
 
