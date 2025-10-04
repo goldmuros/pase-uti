@@ -44,12 +44,16 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Clean and Install dependencies
+      - name: Complete clean install
         run: |
-          echo "📦 Installing dependencies with devDependencies..."
-          NODE_ENV=development npm install
-          echo ""
-          echo "✅ Installation complete"
+          echo "🗑️ Removing package-lock.json and node_modules..."
+          rm -f package-lock.json
+          rm -rf node_modules
+          echo "🧹 Cleaning npm cache..."
+          npm cache clean --force
+          echo "📦 Fresh install of all dependencies..."
+          npm install --prefer-offline --no-audit
+          echo "✅ Complete clean installation finished"
 
       - name: Verify installation
         run: |
