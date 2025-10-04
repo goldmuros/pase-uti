@@ -16,79 +16,26 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Definir las variables de entorno a nivel de job
-    env:
-      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-      NODE_ENV: production
-
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Debug - Check files
-        run: |
-          echo "📂 Checking repository files:"
-          ls -la
-          echo ""
-          echo "📦 Checking package.json:"
-          cat package.json
-          echo ""
-          echo "🔍 Checking if package.json is valid JSON:"
-          node -e "console.log(JSON.parse(require('fs').readFileSync('package.json', 'utf8')))"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Complete clean install
-        run: |
-          echo "🗑️ Removing package-lock.json and node_modules..."
-          rm -f package-lock.json
-          rm -rf node_modules
-          echo "🧹 Cleaning npm cache..."
-          npm cache clean --force
-          echo "📦 Fresh install of all dependencies..."
-          npm install --prefer-offline --no-audit
-          echo "✅ Complete clean installation finished"
-
-      - name: Verify installation
-        run: |
-          echo "📋 Checking installed packages:"
-          npm list --depth=0
-          echo ""
-          echo "🔍 Checking for vite:"
-          npm list vite
-          echo ""
-          echo "📁 Checking node_modules/.bin:"
-          ls -la node_modules/.bin/ | grep vite || echo "❌ Vite not found in bin"
-
-      - name: Verify installation
-        run: |
-          echo "📋 Checking Vite installation:"
-          npm list vite
-          which vite || echo "Vite not in PATH, will use npx"
-
-      - name: Type check (optional)
-        run: npm run typecheck
-        continue-on-error: true
+      - name: Install dependencies (including dev)
+        run: npm install --legacy-peer-deps
+        env:
+          NODE_ENV: development
 
       - name: Build
         run: npm run build
-
-      - name: Verify build output
-        run: |
-          echo "📦 Checking build output..."
-          ls -la dist/
-          if [ -f "dist/index.html" ]; then
-            echo "✅ Build completed successfully"
-          else
-            echo "❌ Build failed - index.html not found"
-            exit 1
-          fi
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
