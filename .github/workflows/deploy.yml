@@ -5,7 +5,7 @@ on:
     branches: [master]
 
 permissions:
-  contents: write # Cambia de 'read' a 'write' para permitir push
+  contents: write
   pages: write
   id-token: write
 
@@ -25,11 +25,9 @@ jobs:
         with:
           node-version: "20"
 
-      # Configurar npm para mayor tolerancia a errores
       - name: Configure npm
         run: |
           npm config set fetch-retries 3
-          npm config set fetch-retries 2
           npm config set fetch-retry-mintimeout 10000
           npm config set fetch-retry-maxtimeout 60000
           npm config set maxsockets 1
@@ -37,7 +35,6 @@ jobs:
       - name: Clear npm cache
         run: npm cache clean --force
 
-      # Limpieza completa: package-lock.json + node_modules
       - name: Complete clean install
         run: |
           echo "🗑️ Removing package-lock.json and node_modules..."
@@ -48,6 +45,19 @@ jobs:
           echo "📦 Fresh install of all dependencies..."
           npm install --prefer-offline --no-audit
           echo "✅ Complete clean installation finished"
+
+      # IMPORTANTE: Verificar que las variables están disponibles
+      - name: Verify environment variables
+        run: |
+          if [ -z "${{ secrets.VITE_SUPABASE_URL }}" ]; then
+            echo "❌ ERROR: VITE_SUPABASE_URL secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.VITE_SUPABASE_ANON_KEY }}" ]; then
+            echo "❌ ERROR: VITE_SUPABASE_ANON_KEY secret is not set"
+            exit 1
+          fi
+          echo "✅ Environment variables are set"
 
       - name: Build
         run: npm run build
