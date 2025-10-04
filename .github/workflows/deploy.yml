@@ -46,13 +46,6 @@ jobs:
           npm install --prefer-offline --no-audit
           echo "✅ Complete clean installation finished"
 
-      - name: Debug build (ELIMINAR DESPUÉS)
-        run: |
-          echo "Build output check..."
-          ls -la dist/
-          # NO imprimas las variables completas por seguridad
-          echo "Checking if env vars were embedded..."
-
       # IMPORTANTE: Verificar que las variables están disponibles
       - name: Verify environment variables
         run: |
@@ -71,6 +64,13 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Debug build (ELIMINAR DESPUÉS)
+        run: |
+          echo "Build output check..."
+          ls -la dist/
+          # NO imprimas las variables completas por seguridad
+          echo "Checking if env vars were embedded..."
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
