@@ -15,7 +15,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing Supabase environment variables.");
 }
 
-console.log("hola supabaseUrl", supabaseUrl);
-console.log("hola supabaseAnonKey", supabaseAnonKey);
-
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

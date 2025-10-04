@@ -46,18 +46,30 @@ jobs:
           npm install --prefer-offline --no-audit
           echo "✅ Complete clean installation finished"
 
+      # DEBUG: Verificar disponibilidad de secrets
+      - name: Debug secrets availability
+        run: |
+          echo "🔍 Checking secrets..."
+          echo "VITE_SUPABASE_URL exists: ${{ secrets.VITE_SUPABASE_URL != '' }}"
+          echo "VITE_SUPABASE_ANON_KEY exists: ${{ secrets.VITE_SUPABASE_ANON_KEY != '' }}"
+          echo "Available secrets context:"
+          echo "${{ toJson(secrets) }}" | jq 'keys'
+        continue-on-error: true
+
       # IMPORTANTE: Verificar que las variables están disponibles
       - name: Verify environment variables
         run: |
           if [ -z "${{ secrets.VITE_SUPABASE_URL }}" ]; then
             echo "❌ ERROR: VITE_SUPABASE_URL secret is not set"
+            echo "Please add it in: Settings → Secrets and variables → Actions → Repository secrets"
             exit 1
           fi
           if [ -z "${{ secrets.VITE_SUPABASE_ANON_KEY }}" ]; then
             echo "❌ ERROR: VITE_SUPABASE_ANON_KEY secret is not set"
+            echo "Please add it in: Settings → Secrets and variables → Actions → Repository secrets"
             exit 1
           fi
-          echo "✅ Environment variables are set"
+          echo "✅ All required secrets are set"
 
       - name: Build
         run: npm run build
