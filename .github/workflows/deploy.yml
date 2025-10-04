@@ -51,6 +51,12 @@ jobs:
           echo "📦 Fresh install of all dependencies..."
           npm install --prefer-offline --no-audit
           echo "✅ Complete clean installation finished"
+          echo "📋 Installed packages:"
+          npm list --depth=0
+
+      - name: Type check (optional)
+        run: npm run typecheck
+        continue-on-error: true
 
       - name: Build
         run: npm run build
