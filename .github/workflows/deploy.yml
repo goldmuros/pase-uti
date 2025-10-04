@@ -46,6 +46,13 @@ jobs:
           npm install --prefer-offline --no-audit
           echo "✅ Complete clean installation finished"
 
+      - name: Debug build (ELIMINAR DESPUÉS)
+        run: |
+          echo "Build output check..."
+          ls -la dist/
+          # NO imprimas las variables completas por seguridad
+          echo "Checking if env vars were embedded..."
+
       # IMPORTANTE: Verificar que las variables están disponibles
       - name: Verify environment variables
         run: |
