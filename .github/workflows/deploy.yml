@@ -31,28 +31,14 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Configure npm
-        run: |
-          npm config set fetch-retries 3
-          npm config set fetch-retry-mintimeout 10000
-          npm config set fetch-retry-maxtimeout 60000
-          npm config set maxsockets 1
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Clear npm cache
-        run: npm cache clean --force
-
-      - name: Complete clean install
+      - name: Verify installation
         run: |
-          echo "🗑️ Removing package-lock.json and node_modules..."
-          rm -f package-lock.json
-          rm -rf node_modules
-          echo "🧹 Cleaning npm cache..."
-          npm cache clean --force
-          echo "📦 Fresh install of all dependencies..."
-          npm install --prefer-offline --no-audit
-          echo "✅ Complete clean installation finished"
-          echo "📋 Installed packages:"
-          npm list --depth=0
+          echo "📋 Checking Vite installation:"
+          npm list vite
+          which vite || echo "Vite not in PATH, will use npx"
 
       - name: Type check (optional)
         run: npm run typecheck
