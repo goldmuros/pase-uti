@@ -5,7 +5,7 @@ on:
     branches: [master]
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -16,7 +16,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,10 +26,8 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install dependencies (including dev)
+      - name: Install dependencies
         run: npm install --legacy-peer-deps
-        env:
-          NODE_ENV: development
 
       - name: Build
         run: npm run build
@@ -37,8 +35,14 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          path: "./dist"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
