@@ -5,7 +5,7 @@ export interface Pase {
   principal: string;
   antecedentes: string;
   gcs_rass: string;
-  cultivos_id: string;
+  cultivos_id: string | null;
   atb: string;
   vc_cook: string;
   actualmente: string;

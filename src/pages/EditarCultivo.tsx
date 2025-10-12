@@ -1,4 +1,4 @@
-import { useCreateCultivo } from "@/hooks/useCultivos";
+import { useCultivo, useUpdateCultivo } from "@/hooks/useCultivos";
 import { usePacientes } from "@/hooks/usePacientes";
 import {
   Alert,
@@ -9,16 +9,20 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  Skeleton,
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useState, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState, type ReactNode } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-const NuevoCultivo = (): ReactNode => {
+const EditarCultivo = (): ReactNode => {
+  const { id = "" } = useParams();
   const navigate = useNavigate();
-  const createCultivo = useCreateCultivo();
+  const updateCultivo = useUpdateCultivo();
+  const { data: cultivo, isLoading, error } = useCultivo(id);
   const { data: pacientes } = usePacientes();
+
   const [formData, setFormData] = useState<{
     paciente_id: string;
     fecha_solicitud: string;
@@ -33,6 +37,29 @@ const NuevoCultivo = (): ReactNode => {
     resultado: "",
   });
 
+  const formatDateTimeLocal = (dateString: string | null) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  useEffect(() => {
+    if (cultivo) {
+      setFormData({
+        paciente_id: (cultivo as any).paciente_id || "",
+        fecha_solicitud: formatDateTimeLocal(cultivo.fecha_solicitud),
+        fecha_recibido: formatDateTimeLocal(cultivo.fecha_recibido),
+        nombre: cultivo.nombre,
+        resultado: cultivo.resultado,
+      });
+    }
+  }, [cultivo]);
+
   const handleChange =
     (field: keyof typeof formData) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,16 +73,15 @@ const NuevoCultivo = (): ReactNode => {
     event.preventDefault();
 
     try {
-      await createCultivo.mutateAsync({
+      await updateCultivo.mutateAsync({
+        id,
         ...formData,
         fecha_recibido: formData.fecha_recibido || null,
       });
 
-      // Navigate back to list on success
       navigate("/cultivos");
     } catch (error) {
-      console.error("Error creating cultivo:", error);
-      // Error is handled by the mutation
+      console.error("Error updating cultivo:", error);
     }
   };
 
@@ -63,15 +89,38 @@ const NuevoCultivo = (): ReactNode => {
     navigate("/cultivos");
   };
 
+  if (isLoading) {
+    return (
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Skeleton variant="text" height={50} sx={{ mb: 3 }} />
+        <Skeleton variant="rectangular" height={60} sx={{ mb: 3 }} />
+        <Skeleton variant="rectangular" height={60} sx={{ mb: 3 }} />
+        <Skeleton variant="rectangular" height={60} sx={{ mb: 3 }} />
+        <Skeleton variant="rectangular" height={150} sx={{ mb: 3 }} />
+      </Container>
+    );
+  }
+
+  if (error || !cultivo) {
+    return (
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Alert severity="error">{error || "Cultivo no encontrado"}</Alert>
+        <Button onClick={handleCancel} sx={{ mt: 2 }}>
+          Volver
+        </Button>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom>
-        Crear Nuevo Cultivo
+        Editar Cultivo
       </Typography>
 
-      {createCultivo.isError && (
+      {updateCultivo.isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Error al crear el cultivo: {createCultivo.error?.message}
+          Error al actualizar el cultivo: {updateCultivo.error?.message}
         </Alert>
       )}
 
@@ -88,6 +137,7 @@ const NuevoCultivo = (): ReactNode => {
                 }))
               }
               label="Paciente"
+              disabled
             >
               {pacientes
                 ?.filter(p => p.activo)
@@ -107,6 +157,7 @@ const NuevoCultivo = (): ReactNode => {
             value={formData.nombre}
             onChange={handleChange("nombre")}
             required
+            disabled
             placeholder="Ej: Hemocultivos, Urocultivo, Cultivo de esputo"
           />
         </Box>
@@ -120,6 +171,7 @@ const NuevoCultivo = (): ReactNode => {
               value={formData.fecha_solicitud}
               onChange={handleChange("fecha_solicitud")}
               required
+              disabled
               InputLabelProps={{
                 shrink: true,
               }}
@@ -158,9 +210,9 @@ const NuevoCultivo = (): ReactNode => {
             type="submit"
             variant="contained"
             color="primary"
-            disabled={createCultivo.isPending}
+            disabled={updateCultivo.isPending}
           >
-            {createCultivo.isPending ? "Creando..." : "Crear Cultivo"}
+            {updateCultivo.isPending ? "Actualizando..." : "Guardar Cambios"}
           </Button>
           <Button variant="outlined" onClick={handleCancel}>
             Cancelar
@@ -171,4 +223,4 @@ const NuevoCultivo = (): ReactNode => {
   );
 };
 
-export default NuevoCultivo;
+export default EditarCultivo;

@@ -52,9 +52,14 @@ const NuevoPase = (): ReactNode => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
+    const cleanedData = {
+      ...formData,
+      cultivos_id: formData.cultivos_id?.trim() || null,
+    };
+
     try {
       await createPase.mutateAsync({
-        ...formData,
+        ...cleanedData,
       });
 
       // Navigate back to list on success

@@ -1,5 +1,8 @@
+import { useCultivos } from "@/hooks/useCultivos";
+import { usePacientes } from "@/hooks/usePacientes";
 import {
   Add as AddIcon,
+  Edit as EditIcon,
   Science as ScienceIcon,
   Warning as WarningIcon,
 } from "@mui/icons-material";
@@ -22,64 +25,8 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { mockCultivos } from "../mock/cultivos";
-import { mockPacientes } from "../mock/pacientes";
-import { mockPases } from "../mock/pases";
-import type { Cultivos } from "../types/Cultivos";
 
-// Tipos para el estado del componente
-interface ListaCultivosState {
-  cultivos: Cultivos[];
-  isLoading: boolean;
-  error: string | null;
-}
-
-// Hook personalizado para obtener datos de cultivos
-const useCultivosData = () => {
-  const [state, setState] = useState<ListaCultivosState>({
-    cultivos: [],
-    isLoading: true,
-    error: null,
-  });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-      try {
-        // Simular delay de API
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        // Ordenar cultivos por fecha de solicitud (más recientes primero)
-        const cultivosOrdenados = mockCultivos.sort(
-          (a, b) =>
-            new Date(b.fecha_solicitud).getTime() -
-            new Date(a.fecha_solicitud).getTime()
-        );
-
-        setState({
-          cultivos: cultivosOrdenados,
-          isLoading: false,
-          error: null,
-        });
-      } catch (error) {
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: `Error al cargar los cultivos: ${error instanceof Error ? error.message : String(error)}`,
-        }));
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  return state;
-};
-
-// Componente principal
 const ListaCultivos: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -88,22 +35,19 @@ const ListaCultivos: React.FC = () => {
     "pacienteId"
   );
 
-  const { cultivos, isLoading, error } = useCultivosData();
-
-  // Filtrar por paciente si se proporciona pacienteId
-  const cultivosFiltrados = pacienteId
-    ? cultivos.filter(cultivo => {
-        const pase = mockPases.find(p => p.id === cultivo.pase_id);
-        return pase && pase.paciente_id === pacienteId;
-      })
-    : cultivos;
+  const { data: cultivos = [], isLoading, error } = useCultivos();
+  const { data: pacientes = [] } = usePacientes();
 
   const pacienteFiltrado = pacienteId
-    ? mockPacientes.find(p => p.id === pacienteId)
+    ? pacientes.find(p => p.id === pacienteId)
     : null;
 
   const agregarNuevoCultivo = () => {
     navigate("/cultivos/nuevo");
+  };
+
+  const editarCultivo = (id: string) => {
+    navigate(`/cultivos/${id}/editar`);
   };
 
   const formatFecha = (fecha: string) => {
@@ -128,7 +72,7 @@ const ListaCultivos: React.FC = () => {
     return { label: "Antiguo", color: "default" as const };
   };
 
-  // Estados de carga
+  // Estado de carga
   if (isLoading) {
     return (
       <Container maxWidth="xl" sx={{ px: { xs: 0.5, sm: 1, md: 2, lg: 3 } }}>
@@ -148,6 +92,7 @@ const ListaCultivos: React.FC = () => {
     );
   }
 
+  // Estado de error
   if (error) {
     return (
       <Container
@@ -157,10 +102,10 @@ const ListaCultivos: React.FC = () => {
         <Alert severity="error" sx={{ mb: 2 }}>
           <Typography variant="h6" sx={{ mb: 1 }}>
             <WarningIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-            {error}
+            Error al cargar los cultivos
           </Typography>
           <Typography variant="body2">
-            No se pudieron cargar los cultivos.
+            {error instanceof Error ? error.message : "Error desconocido"}
           </Typography>
         </Alert>
       </Container>
@@ -175,10 +120,10 @@ const ListaCultivos: React.FC = () => {
         position: "relative",
         width: "100%",
         maxWidth: "100% !important",
-        height: "100vh",
+        minHeight: "100vh",
       }}
     >
-      {/* Header - Responsive */}
+      {/* Header */}
       <Box
         sx={{
           mb: { xs: 2, sm: 3, md: 4 },
@@ -205,7 +150,7 @@ const ListaCultivos: React.FC = () => {
         </Typography>
       </Box>
 
-      {/* Estadísticas rápidas - Responsive */}
+      {/* Estadísticas rápidas */}
       <Grid
         container
         spacing={{ xs: 1, sm: 2 }}
@@ -225,7 +170,7 @@ const ListaCultivos: React.FC = () => {
               variant={isMobile ? "h5" : "h4"}
               sx={{ fontWeight: "bold" }}
             >
-              {cultivosFiltrados.length}
+              {cultivos.length}
             </Typography>
             <Typography
               variant="body2"
@@ -250,7 +195,7 @@ const ListaCultivos: React.FC = () => {
               sx={{ fontWeight: "bold" }}
             >
               {
-                cultivosFiltrados.filter(
+                cultivos.filter(
                   c => getEstadoCultivo(c.fecha_recibido).color === "success"
                 ).length
               }
@@ -277,10 +222,7 @@ const ListaCultivos: React.FC = () => {
               variant={isMobile ? "h5" : "h4"}
               sx={{ fontWeight: "bold" }}
             >
-              {
-                cultivosFiltrados.filter(c => c.resultado.includes("Sensible"))
-                  .length
-              }
+              {cultivos.filter(c => c.resultado.includes("Sensible")).length}
             </Typography>
             <Typography
               variant="body2"
@@ -292,7 +234,8 @@ const ListaCultivos: React.FC = () => {
         </Grid>
       </Grid>
 
-      {cultivosFiltrados.length === 0 ? (
+      {/* Lista vacía */}
+      {cultivos.length === 0 ? (
         <Paper sx={{ p: { xs: 3, sm: 4 }, textAlign: "center" }}>
           <ScienceIcon
             sx={{
@@ -319,7 +262,7 @@ const ListaCultivos: React.FC = () => {
         </Paper>
       ) : (
         <Grid container spacing={{ xs: 1, sm: 2, md: 3 }}>
-          {cultivosFiltrados.map(cultivo => {
+          {cultivos.map(cultivo => {
             const estado = getEstadoCultivo(cultivo.fecha_recibido);
             return (
               <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={cultivo.id}>
@@ -406,26 +349,20 @@ const ListaCultivos: React.FC = () => {
                     </Typography>
                   </CardContent>
                   <CardActions
-                    sx={{
-                      justifyContent: "space-between",
-                      px: 2,
-                      pb: 2,
-                      flexDirection: { xs: "column", sm: "row" },
-                      gap: { xs: 1, sm: 0 },
-                    }}
+                    sx={{ px: 2, pb: 2, justifyContent: "flex-end" }}
                   >
                     <Button
                       size="small"
                       color="primary"
-                      variant="outlined"
-                      onClick={() => navigate(`/pases`)}
+                      variant="contained"
+                      startIcon={<EditIcon />}
+                      onClick={() => editarCultivo(cultivo.id)}
                       sx={{
                         borderRadius: 2,
-                        width: { xs: "100%", sm: "auto" },
                         fontSize: { xs: "0.75rem", sm: "0.875rem" },
                       }}
                     >
-                      Ver Pases
+                      Editar
                     </Button>
                   </CardActions>
                 </Card>
@@ -435,7 +372,7 @@ const ListaCultivos: React.FC = () => {
         </Grid>
       )}
 
-      {/* Botón flotante para agregar cultivo - Responsive */}
+      {/* Botón flotante para agregar cultivo */}
       <Tooltip title="Agregar nuevo cultivo">
         <Fab
           color="primary"

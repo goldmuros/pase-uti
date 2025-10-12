@@ -12,6 +12,26 @@ export const pasesKeys = {
   detail: (id: string) => [...pasesKeys.details(), id] as const,
 };
 
+// Helper function to clean pase data before sending to database
+const cleanPaseData = (data: any) => {
+  const cleaned = { ...data };
+
+  // UUID fields - convert empty strings to null
+  const uuidFields = ["paciente_id", "medico_id", "cultivos_id"];
+  uuidFields.forEach(field => {
+    if (!cleaned[field] || cleaned[field] === "") {
+      cleaned[field] = null;
+    }
+  });
+
+  // Remove timestamp fields that are handled automatically by the database
+  delete cleaned.fecha_creacion;
+  delete cleaned.fecha_modificacion;
+  delete cleaned.id;
+
+  return cleaned;
+};
+
 // Get all pases
 export const usePases = () => {
   return useQuery({
@@ -54,9 +74,12 @@ export const useCreatePase = () => {
     mutationFn: async (
       newPase: Omit<Pase, "id" | "fecha_creacion" | "fecha_modificacion">
     ) => {
+      // Clean the data before inserting
+      const cleanedPase = cleanPaseData(newPase);
+
       const { data, error } = await supabase
         .from("pases")
-        .insert(newPase)
+        .insert(cleanedPase)
         .select()
         .single();
 
@@ -75,9 +98,12 @@ export const useUpdatePase = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Pase> & { id: string }) => {
+      // Clean the data before updating
+      const cleanedUpdates = cleanPaseData(updates);
+
       const { data, error } = await supabase
         .from("pases")
-        .update(updates)
+        .update(cleanedUpdates)
         .eq("id", id)
         .select()
         .single();
