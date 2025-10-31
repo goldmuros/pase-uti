@@ -367,7 +367,7 @@ const ListaPacientes: React.FC = () => {
                           fontSize: { xs: "0.75rem", sm: "0.875rem" },
                         }}
                       >
-                        Cultivos
+                        Agregar Cultivo
                       </Button>
                     </CardActions>
                   </Card>

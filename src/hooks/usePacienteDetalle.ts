@@ -68,7 +68,7 @@ export const usePacienteDetalle = (id: string) => {
           const { data: cultivos, error: cultivosError } = await supabase
             .from("cultivos")
             .select("*")
-            .in("pase_id", paseIds)
+            .eq("paciente_id", paciente.id)
             .order("fecha_recibido", { ascending: false, nullsFirst: false });
 
           if (cultivosError) throw cultivosError;

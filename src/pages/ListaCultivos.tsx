@@ -35,7 +35,7 @@ const ListaCultivos: React.FC = () => {
     "pacienteId"
   );
 
-  const { data: cultivos = [], isLoading, error } = useCultivos();
+  const { data: cultivos = [], isLoading, error } = useCultivos(pacienteId);
   const { data: pacientes = [] } = usePacientes();
 
   const pacienteFiltrado = pacienteId

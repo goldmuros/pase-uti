@@ -12,15 +12,22 @@ export const cultivosKeys = {
   detail: (id: string) => [...cultivosKeys.details(), id] as const,
 };
 
+const getCultivosQuery = (pacienteId?: string) => {
+  let query = supabase.from("cultivos").select("*");
+
+  if (pacienteId) {
+    query = query.eq("paciente_id", pacienteId);
+  }
+
+  return query.order("fecha_solicitud", { ascending: false });
+};
+
 // Get all cultivos
-export const useCultivos = () => {
+export const useCultivos = (pacienteId: string | null) => {
   return useQuery({
     queryKey: cultivosKeys.lists(),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("cultivos")
-        .select("*")
-        .order("fecha_solicitud", { ascending: false });
+      const { data, error } = await getCultivosQuery(pacienteId);
 
       if (error) throw error;
       return data as Cultivos[];

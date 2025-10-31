@@ -5,4 +5,5 @@ export interface Cultivos {
   nombre: string;
   resultado: string;
   created_at: string;
+  paciente_id: string;
 }
