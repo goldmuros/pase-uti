@@ -38,9 +38,10 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { usePacienteDetalle } from "../hooks/usePacienteDetalle";
-import { mockPacientes } from "../mock/pacientes";
-import type { Paciente } from "../types/Paciente";
+import {
+  updatePaciente,
+  usePacienteDetalle,
+} from "../hooks/usePacienteDetalle";
 
 // Componente principal
 const DetallePaciente: React.FC = () => {
@@ -99,20 +100,11 @@ const DetallePaciente: React.FC = () => {
     setMotivoDetalle(event.target.value);
   };
 
-  const handleConfirmarMovimiento = () => {
+  const handleConfirmarMovimiento = async () => {
     if (paciente && motivoTipo) {
-      // Update patient status to inactive (moved)
-      const pacienteIndex = mockPacientes.findIndex(
-        (p: Paciente) => p.id === paciente.id
-      );
-      if (pacienteIndex !== -1) {
-        mockPacientes[pacienteIndex] = {
-          ...mockPacientes[pacienteIndex],
-          activo: false,
-          fecha_alta: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-      }
+      await updatePaciente(paciente.id, {
+        activo: false,
+      });
       handleCloseDialog();
       // Redirect to patient list
       navigate("/pacientes");

@@ -139,3 +139,21 @@ export const usePacientesData = () => {
 
   return state;
 };
+
+export const updatePaciente = async (
+  pacienteId: string,
+  updates: Partial<Paciente>
+): Promise<Paciente> => {
+  const { data, error } = await supabase
+    .from("pacientes")
+    .update(updates)
+    .eq("id", pacienteId)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Error al actualizar paciente: ${error.message}`);
+  }
+
+  return data as Paciente;
+};
