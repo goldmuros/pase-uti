@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 const NuevoPase = (): ReactNode => {
   const navigate = useNavigate();
   const createPase = useCreatePase();
-  const { data: pacientes } = usePacientes();
+  const { data: pacientes } = usePacientes({ todosPacientes: false });
   const { data: medicos } = useMedicos();
   const { data: cultivos } = useCultivos();
   const [formData, setFormData] = useState<Omit<Pase, "id" | "fecha_creacion">>(

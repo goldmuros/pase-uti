@@ -1,7 +1,10 @@
-import { useCultivos } from "@/hooks/useCultivos";
+import { useCultivos, useDeleteCultivo } from "@/hooks/useCultivos";
 import { usePacientes } from "@/hooks/usePacientes";
 import {
   Add as AddIcon,
+  Bed as BedIcon,
+  Clear as ClearIcon,
+  Delete as DeleteIcon,
   Edit as EditIcon,
   Science as ScienceIcon,
   Warning as WarningIcon,
@@ -25,7 +28,33 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { es } from "date-fns/locale";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+const getEstadoCultivo = (estado: string | null) => {
+  if (!estado) {
+    return {
+      color: "info" as const,
+      label: "Pendiente",
+    };
+  }
+
+  if (estado === "positivo") {
+    return {
+      color: "error" as const,
+      label: "Positivo",
+    };
+  }
+
+  return {
+    color: "success" as const,
+    label: "Negativo",
+  };
+};
 
 const ListaCultivos: React.FC = () => {
   const navigate = useNavigate();
@@ -35,8 +64,16 @@ const ListaCultivos: React.FC = () => {
     "pacienteId"
   );
 
-  const { data: cultivos = [], isLoading, error } = useCultivos(pacienteId);
-  const { data: pacientes = [] } = usePacientes();
+  const [fechaFiltro, setFechaFiltro] = useState<Date | null>(new Date());
+
+  const {
+    data: cultivos = [],
+    isLoading,
+    error,
+  } = useCultivos(pacienteId, fechaFiltro);
+  const { data: pacientes = [] } = usePacientes({ todosPacientes: false });
+
+  const deleteCultivo = useDeleteCultivo();
 
   const pacienteFiltrado = pacienteId
     ? pacientes.find(p => p.id === pacienteId)
@@ -58,18 +95,23 @@ const ListaCultivos: React.FC = () => {
     });
   };
 
-  const getEstadoCultivo = (fechaRecibido: string | null) => {
-    if (!fechaRecibido)
-      return { label: "Pendiente", color: "warning" as const };
+  const buscarPaciente = (pacienteId: string) => {
+    return pacientes.find(paciente => paciente.id === pacienteId);
+  };
 
-    const hoy = new Date();
-    const fechaRecibida = new Date(fechaRecibido);
-    const diffTime = hoy.getTime() - fechaRecibida.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const eliminarCultivo = async (id: string) => {
+    if (window.confirm("¿Está seguro de que desea eliminar este cultivo?")) {
+      try {
+        await deleteCultivo.mutateAsync(id);
+      } catch (error) {
+        console.error("Error al eliminar cultivo:", error);
+        alert("Error al eliminar el cultivo");
+      }
+    }
+  };
 
-    if (diffDays <= 1) return { label: "Reciente", color: "success" as const };
-    if (diffDays <= 7) return { label: "Esta semana", color: "info" as const };
-    return { label: "Antiguo", color: "default" as const };
+  const limpiarFiltro = () => {
+    setFechaFiltro(null);
   };
 
   // Estado de carga
@@ -113,286 +155,288 @@ const ListaCultivos: React.FC = () => {
   }
 
   return (
-    <Container
-      maxWidth="xl"
-      sx={{
-        px: { xs: 0.5, sm: 1, md: 2, lg: 3 },
-        position: "relative",
-        width: "100%",
-        maxWidth: "100% !important",
-        minHeight: "100vh",
-      }}
-    >
-      {/* Header */}
-      <Box
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+      <Container
+        maxWidth="xl"
         sx={{
-          mb: { xs: 2, sm: 3, md: 4 },
-          display: "flex",
-          alignItems: "center",
-          flexDirection: { xs: "column", sm: "row" },
-          textAlign: { xs: "center", sm: "left" },
+          px: { xs: 0.5, sm: 1, md: 2, lg: 3 },
+          position: "relative",
+          width: "100%",
+          maxWidth: "100% !important",
+          minHeight: "100vh",
         }}
       >
-        <Typography
-          variant={isMobile ? "h5" : "h4"}
+        {/* Header */}
+        <Box
           sx={{
-            fontWeight: "bold",
-            color: "primary.main",
-            flexGrow: 1,
-            fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
-            mb: { xs: 1, sm: 0 },
+            mb: { xs: 2, sm: 3, md: 4 },
+            display: "flex",
+            alignItems: "center",
+            flexDirection: { xs: "column", sm: "row" },
+            textAlign: { xs: "center", sm: "left" },
           }}
         >
-          <ScienceIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-          {pacienteId && pacienteFiltrado
-            ? `Cultivos de ${pacienteFiltrado.nombre} ${pacienteFiltrado.apellido}`
-            : "Gestión de Cultivos"}
-        </Typography>
-      </Box>
+          <Typography
+            variant={isMobile ? "h5" : "h4"}
+            sx={{
+              fontWeight: "bold",
+              color: "primary.main",
+              flexGrow: 1,
+              fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
+              mb: { xs: 1, sm: 0 },
+            }}
+          >
+            <ScienceIcon sx={{ mr: 1, verticalAlign: "middle" }} />
+            {pacienteId && pacienteFiltrado
+              ? `Cultivos de ${pacienteFiltrado.nombre} ${pacienteFiltrado.apellido}`
+              : "Gestión de Cultivos"}
+          </Typography>
+        </Box>
 
-      {/* Estadísticas rápidas */}
-      <Grid
-        container
-        spacing={{ xs: 1, sm: 2 }}
-        sx={{ mb: { xs: 2, sm: 3, md: 4 } }}
-      >
-        <Grid sx={{ xs: 12, sm: 4 }}>
-          <Paper
-            sx={{
-              p: { xs: 1.5, sm: 2 },
-              textAlign: "center",
-              backgroundColor: "primary.main",
-              color: "white",
-              borderRadius: 2,
-            }}
-          >
-            <Typography
-              variant={isMobile ? "h5" : "h4"}
-              sx={{ fontWeight: "bold" }}
-            >
-              {cultivos.length}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-            >
-              Total de Cultivos
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid sx={{ xs: 12, sm: 4 }}>
-          <Paper
-            sx={{
-              p: { xs: 1.5, sm: 2 },
-              textAlign: "center",
-              backgroundColor: "success.main",
-              color: "white",
-              borderRadius: 2,
-            }}
-          >
-            <Typography
-              variant={isMobile ? "h5" : "h4"}
-              sx={{ fontWeight: "bold" }}
-            >
-              {
-                cultivos.filter(
-                  c => getEstadoCultivo(c.fecha_recibido).color === "success"
-                ).length
-              }
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-            >
-              Recientes
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid sx={{ xs: 12, sm: 4 }}>
-          <Paper
-            sx={{
-              p: { xs: 1.5, sm: 2 },
-              textAlign: "center",
-              backgroundColor: "info.main",
-              color: "white",
-              borderRadius: 2,
-            }}
-          >
-            <Typography
-              variant={isMobile ? "h5" : "h4"}
-              sx={{ fontWeight: "bold" }}
-            >
-              {cultivos.filter(c => c.resultado.includes("Sensible")).length}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-            >
-              Sensibles
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      {/* Lista vacía */}
-      {cultivos.length === 0 ? (
-        <Paper sx={{ p: { xs: 3, sm: 4 }, textAlign: "center" }}>
-          <ScienceIcon
-            sx={{
-              fontSize: { xs: 48, sm: 64 },
-              color: "text.secondary",
-              mb: 2,
+        {/* Filtro de fecha */}
+        <Box
+          sx={{
+            mb: 3,
+            display: "flex",
+            gap: 2,
+            alignItems: "center",
+            flexDirection: { xs: "column", sm: "row" },
+          }}
+        >
+          <DatePicker
+            label="Filtrar por fecha de solicitud"
+            value={fechaFiltro}
+            onChange={newValue => setFechaFiltro(newValue)}
+            slotProps={{
+              textField: {
+                size: isMobile ? "small" : "medium",
+                fullWidth: isMobile,
+                sx: { minWidth: { sm: 250 } },
+              },
             }}
           />
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            No hay cultivos registrados
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Comience agregando un nuevo cultivo al sistema.
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={agregarNuevoCultivo}
-            sx={{ borderRadius: 2 }}
-            size={isMobile ? "medium" : "large"}
-          >
-            Agregar Primer Cultivo
-          </Button>
-        </Paper>
-      ) : (
-        <Grid container spacing={{ xs: 1, sm: 2, md: 3 }}>
-          {cultivos.map(cultivo => {
-            const estado = getEstadoCultivo(cultivo.fecha_recibido);
-            return (
-              <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={cultivo.id}>
-                <Card
-                  elevation={2}
-                  sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    borderRadius: 2,
-                    "&:hover": {
-                      boxShadow: 4,
-                      transform: "translateY(-2px)",
-                      transition: "all 0.2s ease-in-out",
-                    },
-                  }}
-                >
-                  <CardHeader
-                    avatar={
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <ScienceIcon color="primary" />
-                      </Box>
-                    }
-                    title={
-                      <Box
+          {fechaFiltro && (
+            <Button
+              variant="outlined"
+              startIcon={<ClearIcon />}
+              onClick={limpiarFiltro}
+              size={isMobile ? "small" : "medium"}
+              sx={{ borderRadius: 2 }}
+            >
+              Limpiar filtro
+            </Button>
+          )}
+        </Box>
+
+        {/* Lista vacía */}
+        {cultivos.length === 0 ? (
+          <Paper sx={{ p: { xs: 3, sm: 4 }, textAlign: "center" }}>
+            <ScienceIcon
+              sx={{
+                fontSize: { xs: 48, sm: 64 },
+                color: "text.secondary",
+                mb: 2,
+              }}
+            />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              {fechaFiltro
+                ? "No hay cultivos registrados para esta fecha"
+                : "No hay cultivos registrados"}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              {fechaFiltro
+                ? "Intente con otra fecha o limpie el filtro."
+                : "Comience agregando un nuevo cultivo al sistema."}
+            </Typography>
+            {!fechaFiltro ? (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={agregarNuevoCultivo}
+                sx={{ borderRadius: 2 }}
+                size={isMobile ? "medium" : "large"}
+              >
+                Agregar Primer Cultivo
+              </Button>
+            ) : (
+              <Button
+                variant="outlined"
+                startIcon={<ClearIcon />}
+                onClick={limpiarFiltro}
+                sx={{ borderRadius: 2 }}
+                size={isMobile ? "medium" : "large"}
+              >
+                Limpiar filtro
+              </Button>
+            )}
+          </Paper>
+        ) : (
+          <Grid container spacing={{ xs: 1, sm: 2, md: 3 }}>
+            {cultivos.map(cultivo => {
+              return (
+                <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={cultivo.id}>
+                  <Card
+                    elevation={2}
+                    sx={{
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      borderRadius: 2,
+                      "&:hover": {
+                        boxShadow: 4,
+                        transform: "translateY(-2px)",
+                        transition: "all 0.2s ease-in-out",
+                      },
+                    }}
+                  >
+                    <CardHeader
+                      title={
+                        <Box
+                          sx={{
+                            display: "flex",
+                            gap: 1,
+                            flexWrap: "wrap",
+                            flexDirection: "column",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-around",
+                              gap: 1,
+                              flexWrap: "wrap",
+                              flexDirection: "row",
+                            }}
+                          >
+                            <Typography
+                              variant={isMobile ? "body1" : "h6"}
+                              sx={{ fontWeight: "bold" }}
+                            >
+                              <BedIcon fontSize="small" sx={{ mr: 1 }} />
+                              {buscarPaciente(cultivo.paciente_id)?.cama}
+                            </Typography>
+                            <Typography
+                              variant={isMobile ? "body1" : "h6"}
+                              sx={{ fontWeight: "bold" }}
+                            >
+                              {`${buscarPaciente(cultivo.paciente_id)?.nombre}
+                                ${buscarPaciente(cultivo.paciente_id)?.apellido}`}
+                            </Typography>
+                          </Box>
+                          <Chip
+                            size="small"
+                            variant="filled"
+                            {...getEstadoCultivo(cultivo.estado)}
+                          />
+                        </Box>
+                      }
+                      subheader={
+                        <Box>
+                          <Box>
+                            <Typography
+                              variant={isMobile ? "body1" : "h6"}
+                              sx={{ fontWeight: "bold" }}
+                            >
+                              {cultivo.nombre}
+                            </Typography>
+                          </Box>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              mb: 0.5,
+                              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                            }}
+                          >
+                            Solicitado: {formatFecha(cultivo.fecha_solicitud)}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                            }}
+                          >
+                            Recibido:{" "}
+                            {cultivo.fecha_recibido
+                              ? formatFecha(cultivo.fecha_recibido)
+                              : "Pendiente"}
+                          </Typography>
+                        </Box>
+                      }
+                      sx={{ flexGrow: 1, pb: 1 }}
+                    />
+                    <CardContent sx={{ flexGrow: 1, pt: 0 }}>
+                      <Typography
+                        variant="body2"
                         sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                          flexWrap: "wrap",
+                          fontSize: { xs: "0.875rem", sm: "1rem" },
+                          color: "text.primary",
                         }}
                       >
-                        <Typography
-                          variant={isMobile ? "body1" : "h6"}
-                          sx={{ fontWeight: "bold" }}
-                        >
-                          {cultivo.nombre}
-                        </Typography>
-                        <Chip
-                          size="small"
-                          label={estado.label}
-                          color={estado.color}
-                          variant="filled"
-                        />
-                      </Box>
-                    }
-                    subheader={
-                      <Box>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{
-                            mb: 0.5,
-                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                          }}
-                        >
-                          Solicitado: {formatFecha(cultivo.fecha_solicitud)}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{
-                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                          }}
-                        >
-                          Recibido:{" "}
-                          {cultivo.fecha_recibido
-                            ? formatFecha(cultivo.fecha_recibido)
-                            : "Pendiente"}
-                        </Typography>
-                      </Box>
-                    }
-                    sx={{ flexGrow: 1, pb: 1 }}
-                  />
-                  <CardContent sx={{ flexGrow: 1, pt: 0 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontSize: { xs: "0.875rem", sm: "1rem" },
-                        color: "text.primary",
-                      }}
+                        <strong>Resultado:</strong> {cultivo.resultado}
+                      </Typography>
+                    </CardContent>
+                    <CardActions
+                      sx={{ px: 2, pb: 2, justifyContent: "flex-end", gap: 1 }}
                     >
-                      <strong>Resultado:</strong> {cultivo.resultado}
-                    </Typography>
-                  </CardContent>
-                  <CardActions
-                    sx={{ px: 2, pb: 2, justifyContent: "flex-end" }}
-                  >
-                    <Button
-                      size="small"
-                      color="primary"
-                      variant="contained"
-                      startIcon={<EditIcon />}
-                      onClick={() => editarCultivo(cultivo.id)}
-                      sx={{
-                        borderRadius: 2,
-                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                      }}
-                    >
-                      Editar
-                    </Button>
-                  </CardActions>
-                </Card>
-              </Grid>
-            );
-          })}
-        </Grid>
-      )}
+                      <Button
+                        size="small"
+                        color="error"
+                        variant="outlined"
+                        startIcon={<DeleteIcon />}
+                        onClick={() => eliminarCultivo(cultivo.id)}
+                        disabled={deleteCultivo.isPending}
+                        sx={{
+                          borderRadius: 2,
+                          fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        }}
+                      >
+                        Eliminar
+                      </Button>
+                      <Button
+                        size="small"
+                        color="primary"
+                        variant="contained"
+                        startIcon={<EditIcon />}
+                        onClick={() => editarCultivo(cultivo.id)}
+                        sx={{
+                          borderRadius: 2,
+                          fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        }}
+                      >
+                        Editar
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              );
+            })}
+          </Grid>
+        )}
 
-      {/* Botón flotante para agregar cultivo */}
-      <Tooltip title="Agregar nuevo cultivo">
-        <Fab
-          color="primary"
-          aria-label="add"
-          onClick={agregarNuevoCultivo}
-          sx={{
-            position: "fixed",
-            bottom: { xs: 16, sm: 24 },
-            right: { xs: 16, sm: 24 },
-            boxShadow: 4,
-            width: { xs: 48, sm: 56 },
-            height: { xs: 48, sm: 56 },
-            zIndex: theme.zIndex.speedDial,
-          }}
-          size={isMobile ? "medium" : "large"}
-        >
-          <AddIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
-        </Fab>
-      </Tooltip>
-    </Container>
+        {/* Botón flotante para agregar cultivo */}
+        <Tooltip title="Agregar nuevo cultivo">
+          <Fab
+            color="primary"
+            aria-label="add"
+            onClick={agregarNuevoCultivo}
+            sx={{
+              position: "fixed",
+              bottom: { xs: 16, sm: 24 },
+              right: { xs: 16, sm: 24 },
+              boxShadow: 4,
+              width: { xs: 48, sm: 56 },
+              height: { xs: 48, sm: 56 },
+              zIndex: theme.zIndex.speedDial,
+            }}
+            size={isMobile ? "medium" : "large"}
+          >
+            <AddIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+          </Fab>
+        </Tooltip>
+      </Container>
+    </LocalizationProvider>
   );
 };
 

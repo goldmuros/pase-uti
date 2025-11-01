@@ -12,15 +12,27 @@ export const pacientesKeys = {
   detail: (id: string) => [...pacientesKeys.details(), id] as const,
 };
 
+const tabla = supabase.from("pacientes");
+const getPacientesQuery = (todosPacientes: boolean) => {
+  let query = tabla.select("*");
+
+  if (!todosPacientes) {
+    query = query.eq("activo", !todosPacientes);
+  }
+
+  return query.order("fecha_ingreso", { ascending: false });
+};
+
 // Get all pacientes
-export const usePacientes = () => {
+export const usePacientes = ({
+  todosPacientes,
+}: {
+  todosPacientes: boolean;
+}) => {
   return useQuery({
     queryKey: pacientesKeys.lists(),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("pacientes")
-        .select("*")
-        .order("fecha_ingreso", { ascending: false });
+      const { data, error } = await getPacientesQuery(todosPacientes);
 
       if (error) throw error;
       return data as Paciente[];
@@ -33,11 +45,7 @@ export const usePaciente = (id: string) => {
   return useQuery({
     queryKey: pacientesKeys.detail(id),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("pacientes")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const { data, error } = await tabla.select("*").eq("id", id).single();
 
       if (error) throw error;
       return data as Paciente;
@@ -54,11 +62,7 @@ export const useCreatePaciente = () => {
     mutationFn: async (
       newPaciente: Omit<Paciente, "id" | "created_at" | "updated_at">
     ) => {
-      const { data, error } = await supabase
-        .from("pacientes")
-        .insert(newPaciente)
-        .select()
-        .single();
+      const { data, error } = await tabla.insert(newPaciente).select().single();
 
       if (error) throw error;
       return data as Paciente;
@@ -78,8 +82,7 @@ export const useUpdatePaciente = () => {
       id,
       ...updates
     }: Partial<Paciente> & { id: string }) => {
-      const { data, error } = await supabase
-        .from("pacientes")
+      const { data, error } = await tabla
         .update(updates)
         .eq("id", id)
         .select()
@@ -103,7 +106,7 @@ export const useDeletePaciente = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("pacientes").delete().eq("id", id);
+      const { error } = await tabla.delete().eq("id", id);
 
       if (error) throw error;
     },

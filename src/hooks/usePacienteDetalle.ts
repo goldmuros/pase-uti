@@ -69,6 +69,7 @@ export const usePacienteDetalle = (id: string) => {
             .from("cultivos")
             .select("*")
             .eq("paciente_id", paciente.id)
+            .eq("activo", true)
             .order("fecha_recibido", { ascending: false, nullsFirst: false });
 
           if (cultivosError) throw cultivosError;

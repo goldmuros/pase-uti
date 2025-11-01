@@ -46,7 +46,7 @@ const ListaCultivos: React.FC<ListaCultivosProps> = ({
   const getEstadoCultivo = (cultivo: Cultivos) => {
     return cultivo.fecha_recibido
       ? { color: "success" as const, label: "Recibido" }
-      : { color: "warning" as const, label: "Pendiente" };
+      : { color: "info" as const, label: "Pendiente" };
   };
 
   return (

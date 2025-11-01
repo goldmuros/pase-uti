@@ -1,8 +1,7 @@
+import Cultivo from "@/pages/Cultivo";
 import DetalleMedico from "@/pages/DetalleMedico";
-import EditarCultivo from "@/pages/EditarCultivo";
 import ListaCultivos from "@/pages/ListaCultivos";
 import ListaMedicos from "@/pages/ListaMedicos";
-import NuevoCultivo from "@/pages/NuevoCultivo";
 import NuevoMedico from "@/pages/NuevoMedico";
 import NuevoPaciente from "@/pages/NuevoPaciente";
 import NuevoPase from "@/pages/NuevoPase";
@@ -71,11 +70,11 @@ const routes = [
           },
           {
             path: "nuevo",
-            element: <NuevoCultivo />,
+            element: <Cultivo />,
           },
           {
             path: ":id/editar",
-            element: <EditarCultivo />,
+            element: <Cultivo />,
           },
         ],
       },

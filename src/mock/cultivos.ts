@@ -7,6 +7,8 @@ export const mockCultivos: import("../types/Cultivos").Cultivos[] = [
     resultado: "Negativo",
     created_at: "2025-08-28T10:00:00Z",
     paciente_id: "paciente_1",
+    estado: "pendiente",
+    activo: true,
   },
   {
     id: "cult_2",
@@ -16,5 +18,7 @@ export const mockCultivos: import("../types/Cultivos").Cultivos[] = [
     resultado: "E. coli resistente",
     created_at: "2025-08-25T09:00:00Z",
     paciente_id: "paciente_2",
+    estado: "positivo",
+    activo: true,
   },
 ];

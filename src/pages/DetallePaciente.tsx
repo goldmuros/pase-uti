@@ -574,10 +574,10 @@ const DetallePaciente: React.FC = () => {
                 label="Tipo de Motivo"
                 onChange={handleMotivoTipoChange}
               >
-                <MenuItem value="alta">Alta</MenuItem>
+                <MenuItem value="alta_hospitalaria">Alta hospitalaria</MenuItem>
+                <MenuItem value="alta_servicio">Alta del servicio</MenuItem>
                 <MenuItem value="derivación">Derivación</MenuItem>
-                <MenuItem value="sala">Sala</MenuItem>
-                <MenuItem value="obituario">Obituario</MenuItem>
+                <MenuItem value="obito">Óbito</MenuItem>
               </Select>
             </FormControl>
 

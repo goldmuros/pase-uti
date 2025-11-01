@@ -6,4 +6,6 @@ export interface Cultivos {
   resultado: string;
   created_at: string;
   paciente_id: string;
+  estado: string;
+  activo: boolean;
 }

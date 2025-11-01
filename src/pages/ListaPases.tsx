@@ -35,20 +35,15 @@ export interface PasesPorPaciente {
 }
 
 // Hook personalizado para obtener pases agrupados por paciente
-const usePasesAgrupadosData = () => {
+const usePasesAgrupadosData = (pacientes: Paciente[] | undefined) => {
   const {
     data: pases,
     isLoading: isLoadingPases,
     error: errorPases,
   } = usePases();
-  const {
-    data: pacientes,
-    isLoading: isLoadingPacientes,
-    error: errorPacientes,
-  } = usePacientes();
 
-  const isLoading = isLoadingPases || isLoadingPacientes;
-  const error = errorPases || errorPacientes;
+  const isLoading = isLoadingPases;
+  const error = errorPases;
 
   if (isLoading || error || !pases || !pacientes) {
     return {
@@ -113,8 +108,9 @@ const ListaPases: React.FC = () => {
     "pacienteId"
   );
 
-  const { data: pacientes } = usePacientes();
-  const { pasesPorPaciente, isLoading, error } = usePasesAgrupadosData();
+  const { data: pacientes } = usePacientes({ todosPacientes: false });
+  const { pasesPorPaciente, isLoading, error } =
+    usePasesAgrupadosData(pacientes);
 
   // Filtrar por paciente si se proporciona pacienteId
   const pasesFiltrados = pacienteId
@@ -124,10 +120,6 @@ const ListaPases: React.FC = () => {
   const pacienteFiltrado = pacienteId
     ? pacientes?.find(p => p.id === pacienteId)
     : null;
-
-  // const cultivos = mockCultivos.filter(
-  //   cultivo => cultivo.pacienteId === pacienteId
-  // );
 
   const handleGoBack = () => {
     navigate(-1);

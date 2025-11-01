@@ -2,6 +2,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../config/supabase";
 import type { Cultivos } from "../types/Cultivos";
 
+const formatDateTimeLocal = (dateString: string | null) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
 // Query keys
 export const cultivosKeys = {
   all: ["cultivos"] as const,
@@ -12,25 +22,70 @@ export const cultivosKeys = {
   detail: (id: string) => [...cultivosKeys.details(), id] as const,
 };
 
-const getCultivosQuery = (pacienteId?: string) => {
-  let query = supabase.from("cultivos").select("*");
+const getCultivosQuery = (
+  pacienteId: string | null,
+  fechaFiltro: Date | null
+) => {
+  let query = supabase.from("cultivos").select(`
+      *,
+      pacientes!inner (
+        id,
+        nombre,
+        apellido,
+        cama,
+        activo
+      )
+    `);
 
   if (pacienteId) {
     query = query.eq("paciente_id", pacienteId);
   }
 
-  return query.order("fecha_solicitud", { ascending: false });
+  // Filtrar por fecha si se proporciona
+  if (fechaFiltro) {
+    const fechaInicio = new Date(fechaFiltro);
+    fechaInicio.setHours(0, 0, 0, 0);
+
+    const fechaFin = new Date(fechaFiltro);
+    fechaFin.setHours(23, 59, 59, 999);
+
+    query = query.eq("fecha_recibido", fechaInicio.toISOString());
+  }
+
+  return query.order("pacientes(cama)", { ascending: true });
 };
 
 // Get all cultivos
-export const useCultivos = (pacienteId: string | null) => {
+export const useCultivos = (
+  pacienteId: string | null,
+  fechaFiltro: Date | null = null
+) => {
   return useQuery({
-    queryKey: cultivosKeys.lists(),
+    queryKey: cultivosKeys.list({
+      pacienteId,
+      fechaFiltro: fechaFiltro?.toISOString(),
+    }),
     queryFn: async () => {
-      const { data, error } = await getCultivosQuery(pacienteId);
+      const { data, error } = await getCultivosQuery(pacienteId, fechaFiltro);
 
       if (error) throw error;
-      return data as Cultivos[];
+
+      const sortedData = (data as any[]).sort((a, b) => {
+        const camaA = parseInt(a.pacientes?.cama || "0", 10);
+        const camaB = parseInt(b.pacientes?.cama || "0", 10);
+
+        if (camaA !== camaB) {
+          return camaA - camaB;
+        }
+
+        // Si las camas son iguales, ordenar por fecha
+        return (
+          new Date(b.fecha_solicitud).getTime() -
+          new Date(a.fecha_solicitud).getTime()
+        );
+      });
+
+      return sortedData as Cultivos[];
     },
   });
 };
@@ -47,8 +102,15 @@ export const useCultivo = (id: string) => {
         .single();
 
       if (error) throw error;
-      return data as Cultivos;
+      return {
+        paciente_id: data.paciente_id || "",
+        fecha_solicitud: formatDateTimeLocal(data.fecha_solicitud),
+        fecha_recibido: formatDateTimeLocal(data.fecha_recibido),
+        nombre: data.nombre,
+        resultado: data.resultado,
+      } as Cultivos;
     },
+
     enabled: !!id,
   });
 };
@@ -100,13 +162,16 @@ export const useUpdateCultivo = () => {
   });
 };
 
-// Delete cultivo
+// Delete cultivo (soft delete - marca como inactivo)
 export const useDeleteCultivo = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("cultivos").delete().eq("id", id);
+      const { error } = await supabase
+        .from("cultivos")
+        .update({ activo: false })
+        .eq("id", id);
 
       if (error) throw error;
     },

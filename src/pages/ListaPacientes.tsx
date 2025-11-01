@@ -36,7 +36,11 @@ const ListaPacientes: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const { data: pacientes, isLoading, error } = usePacientes();
+  const {
+    data: pacientes,
+    isLoading,
+    error,
+  } = usePacientes({ todosPacientes: true });
   const [tabValue, setTabValue] = useState(0);
 
   const irDetallePaciente = (pacienteId: string) => {
