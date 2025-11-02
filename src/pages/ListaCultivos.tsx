@@ -3,7 +3,6 @@ import { usePacientes } from "@/hooks/usePacientes";
 import {
   Add as AddIcon,
   Bed as BedIcon,
-  Clear as ClearIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
   Science as ScienceIcon,
@@ -19,6 +18,11 @@ import {
   CardHeader,
   Chip,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Fab,
   Grid,
   Paper,
@@ -36,7 +40,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const getEstadoCultivo = (estado: string | null) => {
-  if (!estado) {
+  if (!estado || estado === "pendiente") {
     return {
       color: "info" as const,
       label: "Pendiente",
@@ -65,12 +69,15 @@ const ListaCultivos: React.FC = () => {
   );
 
   const [fechaFiltro, setFechaFiltro] = useState<Date | null>(new Date());
+  const [abrirDialogBorrar, setAbrirDialogBorrar] = useState<string | null>(
+    null
+  );
 
   const {
     data: cultivos = [],
     isLoading,
     error,
-  } = useCultivos(pacienteId, fechaFiltro);
+  } = useCultivos(fechaFiltro, pacienteId);
   const { data: pacientes = [] } = usePacientes({ todosPacientes: false });
 
   const deleteCultivo = useDeleteCultivo();
@@ -100,18 +107,13 @@ const ListaCultivos: React.FC = () => {
   };
 
   const eliminarCultivo = async (id: string) => {
-    if (window.confirm("¿Está seguro de que desea eliminar este cultivo?")) {
-      try {
-        await deleteCultivo.mutateAsync(id);
-      } catch (error) {
-        console.error("Error al eliminar cultivo:", error);
-        alert("Error al eliminar el cultivo");
-      }
+    try {
+      await deleteCultivo.mutateAsync(id);
+      setAbrirDialogBorrar(null);
+    } catch (error) {
+      console.error("Error al eliminar cultivo:", error);
+      alert("Error al eliminar el cultivo");
     }
-  };
-
-  const limpiarFiltro = () => {
-    setFechaFiltro(null);
   };
 
   // Estado de carga
@@ -215,17 +217,6 @@ const ListaCultivos: React.FC = () => {
               },
             }}
           />
-          {fechaFiltro && (
-            <Button
-              variant="outlined"
-              startIcon={<ClearIcon />}
-              onClick={limpiarFiltro}
-              size={isMobile ? "small" : "medium"}
-              sx={{ borderRadius: 2 }}
-            >
-              Limpiar filtro
-            </Button>
-          )}
         </Box>
 
         {/* Lista vacía */}
@@ -248,27 +239,15 @@ const ListaCultivos: React.FC = () => {
                 ? "Intente con otra fecha o limpie el filtro."
                 : "Comience agregando un nuevo cultivo al sistema."}
             </Typography>
-            {!fechaFiltro ? (
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={agregarNuevoCultivo}
-                sx={{ borderRadius: 2 }}
-                size={isMobile ? "medium" : "large"}
-              >
-                Agregar Primer Cultivo
-              </Button>
-            ) : (
-              <Button
-                variant="outlined"
-                startIcon={<ClearIcon />}
-                onClick={limpiarFiltro}
-                sx={{ borderRadius: 2 }}
-                size={isMobile ? "medium" : "large"}
-              >
-                Limpiar filtro
-              </Button>
-            )}
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={agregarNuevoCultivo}
+              sx={{ borderRadius: 2 }}
+              size={isMobile ? "medium" : "large"}
+            >
+              Agregar Primer Cultivo
+            </Button>
           </Paper>
         ) : (
           <Grid container spacing={{ xs: 1, sm: 2, md: 3 }}>
@@ -385,7 +364,7 @@ const ListaCultivos: React.FC = () => {
                         color="error"
                         variant="outlined"
                         startIcon={<DeleteIcon />}
-                        onClick={() => eliminarCultivo(cultivo.id)}
+                        onClick={() => setAbrirDialogBorrar(cultivo.id)}
                         disabled={deleteCultivo.isPending}
                         sx={{
                           borderRadius: 2,
@@ -416,26 +395,57 @@ const ListaCultivos: React.FC = () => {
         )}
 
         {/* Botón flotante para agregar cultivo */}
-        <Tooltip title="Agregar nuevo cultivo">
-          <Fab
-            color="primary"
-            aria-label="add"
-            onClick={agregarNuevoCultivo}
-            sx={{
-              position: "fixed",
-              bottom: { xs: 16, sm: 24 },
-              right: { xs: 16, sm: 24 },
-              boxShadow: 4,
-              width: { xs: 48, sm: 56 },
-              height: { xs: 48, sm: 56 },
-              zIndex: theme.zIndex.speedDial,
-            }}
-            size={isMobile ? "medium" : "large"}
-          >
-            <AddIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
-          </Fab>
-        </Tooltip>
+        {cultivos.length > 0 && (
+          <Tooltip title="Agregar nuevo cultivo">
+            <Fab
+              color="primary"
+              aria-label="add"
+              onClick={agregarNuevoCultivo}
+              sx={{
+                position: "fixed",
+                bottom: { xs: 16, sm: 24 },
+                right: { xs: 16, sm: 24 },
+                boxShadow: 4,
+                width: { xs: 48, sm: 56 },
+                height: { xs: 48, sm: 56 },
+                zIndex: theme.zIndex.speedDial,
+              }}
+              size={isMobile ? "medium" : "large"}
+            >
+              <AddIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+            </Fab>
+          </Tooltip>
+        )}
       </Container>
+      {abrirDialogBorrar && (
+        <Dialog open onClose={() => setAbrirDialogBorrar(null)}>
+          <DialogTitle>Eliminar cultivo</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              ¿Esta seguro de eliminar el cultivo?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              size="small"
+              color="error"
+              variant="outlined"
+              onClick={() => setAbrirDialogBorrar(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              size="small"
+              color="primary"
+              variant="contained"
+              onClick={() => eliminarCultivo(abrirDialogBorrar)}
+              autoFocus
+            >
+              Aceptar
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </LocalizationProvider>
   );
 };

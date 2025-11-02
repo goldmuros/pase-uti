@@ -24,7 +24,7 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router";
 
-const CULTIVOS = [
+export const CULTIVOS = [
   { id: "hemocultivo", nombre: "Hemocultivo" },
   { id: "urocultivo", nombre: "Urocultivo" },
   { id: "minibal", nombre: "Minibal" },
@@ -41,12 +41,13 @@ const DEFAULT_CULTIVO = {
   resultado: "",
   estado: "pendiente",
 };
+
 const Cultivo = (): ReactNode => {
-  const { id = "" } = useParams();
+  const { id: cultivoId = "" } = useParams();
   const navigate = useNavigate();
   const updateCultivo = useUpdateCultivo();
   const createCultivo = useCreateCultivo();
-  const { data: cultivo } = useCultivo(id);
+  const { data: cultivo } = useCultivo(cultivoId);
 
   const { data: pacientes } = usePacientes({ todosPacientes: false });
 
@@ -76,11 +77,20 @@ const Cultivo = (): ReactNode => {
     event.preventDefault();
 
     try {
-      await createCultivo.mutateAsync({
-        ...formCultivo,
-        fecha_recibido: formCultivo.fecha_recibido || null,
-        activo: true,
-      });
+      if (cultivoId) {
+        await updateCultivo.mutateAsync({
+          id: cultivoId,
+          ...formCultivo,
+          fecha_recibido: formCultivo.fecha_recibido || null,
+          activo: true,
+        });
+      } else {
+        await createCultivo.mutateAsync({
+          ...formCultivo,
+          fecha_recibido: formCultivo.fecha_recibido || null,
+          activo: true,
+        });
+      }
 
       // Navigate back to list on success
       navigate("/cultivos");
@@ -95,7 +105,7 @@ const Cultivo = (): ReactNode => {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom>
-        Crear Nuevo Cultivo
+        {cultivoId ? "Modificar" : "Crear Nuevo"} Cultivo
       </Typography>
 
       {createCultivo.isError && (
@@ -196,6 +206,7 @@ const Cultivo = (): ReactNode => {
                 aria-labelledby="estado"
                 name="radio-buttons-group"
                 onChange={handleChange("estado")}
+                value={formCultivo.estado}
                 row
               >
                 <FormControlLabel
@@ -219,7 +230,7 @@ const Cultivo = (): ReactNode => {
             color="primary"
             disabled={createCultivo.isPending}
           >
-            {createCultivo.isPending ? "Creando..." : "Crear Cultivo"}
+            {cultivoId ? "Modificar cultivo" : "Crear cultivo"}
           </Button>
           <Button variant="outlined" onClick={handleCancel}>
             Cancelar

@@ -4,13 +4,12 @@ import ListaCultivos from "@/pages/ListaCultivos";
 import ListaMedicos from "@/pages/ListaMedicos";
 import NuevoMedico from "@/pages/NuevoMedico";
 import NuevoPaciente from "@/pages/NuevoPaciente";
-import NuevoPase from "@/pages/NuevoPase";
+import Pase from "@/pages/Pase";
 import DetallePaciente from "../pages/DetallePaciente";
 import ErrorBoundary from "../pages/ErrorBoundary";
 import Home from "../pages/Home";
 import ListaPacientes from "../pages/ListaPacientes";
 import ListaPases from "../pages/ListaPases";
-import Pase from "../pages/Pase";
 import Layout from "./Layout";
 
 const routes = [
@@ -87,7 +86,7 @@ const routes = [
           },
           {
             path: "nuevo",
-            element: <NuevoPase />,
+            element: <Pase />,
           },
           {
             path: ":id",

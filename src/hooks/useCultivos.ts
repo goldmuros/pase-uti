@@ -22,11 +22,11 @@ export const cultivosKeys = {
   detail: (id: string) => [...cultivosKeys.details(), id] as const,
 };
 
-const getCultivosQuery = (
-  pacienteId: string | null,
-  fechaFiltro: Date | null
-) => {
-  let query = supabase.from("cultivos").select(`
+const getCultivosQuery = (pacienteId?: string | null) => {
+  let query = supabase
+    .from("cultivos")
+    .select(
+      `
       *,
       pacientes!inner (
         id,
@@ -35,42 +35,65 @@ const getCultivosQuery = (
         cama,
         activo
       )
-    `);
+    `
+    )
+    .eq("activo", true); // Solo cultivos activos
 
   if (pacienteId) {
     query = query.eq("paciente_id", pacienteId);
   }
 
-  // Filtrar por fecha si se proporciona
-  if (fechaFiltro) {
-    const fechaInicio = new Date(fechaFiltro);
-    fechaInicio.setHours(0, 0, 0, 0);
-
-    const fechaFin = new Date(fechaFiltro);
-    fechaFin.setHours(23, 59, 59, 999);
-
-    query = query.eq("fecha_recibido", fechaInicio.toISOString());
-  }
-
   return query.order("pacientes(cama)", { ascending: true });
+};
+
+export const useGetCultivosPorPaciente = (pacienteId?: string) => {
+  return useQuery({
+    queryKey: cultivosKeys.list({
+      pacienteId,
+    }),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cultivos")
+        .select("*")
+        .eq("activo", true)
+        .eq("paciente_id", pacienteId);
+
+      return data;
+    },
+    enabled: Boolean(pacienteId),
+  });
 };
 
 // Get all cultivos
 export const useCultivos = (
-  pacienteId: string | null,
-  fechaFiltro: Date | null = null
+  fechaFiltro: Date | null,
+  pacienteId?: string | null
 ) => {
   return useQuery({
     queryKey: cultivosKeys.list({
       pacienteId,
-      fechaFiltro: fechaFiltro?.toISOString(),
     }),
     queryFn: async () => {
-      const { data, error } = await getCultivosQuery(pacienteId, fechaFiltro);
+      const { data, error } = await getCultivosQuery(pacienteId);
 
       if (error) throw error;
 
-      const sortedData = (data as any[]).sort((a, b) => {
+      // Filtrar por fecha en el cliente
+      let filteredData = data as any[];
+
+      if (fechaFiltro) {
+        const fechaStr = formatDateTimeLocal(fechaFiltro.toISOString());
+
+        filteredData = filteredData.filter(cultivo => {
+          // Incluir si fecha_recibido coincide O si es null
+          return (
+            !cultivo.fecha_recibido ||
+            formatDateTimeLocal(cultivo.fecha_recibido) === fechaStr
+          );
+        });
+      }
+
+      const sortedData = filteredData.sort((a, b) => {
         const camaA = parseInt(a.pacientes?.cama || "0", 10);
         const camaB = parseInt(b.pacientes?.cama || "0", 10);
 
@@ -108,6 +131,7 @@ export const useCultivo = (id: string) => {
         fecha_recibido: formatDateTimeLocal(data.fecha_recibido),
         nombre: data.nombre,
         resultado: data.resultado,
+        estado: data.estado,
       } as Cultivos;
     },
 
@@ -168,15 +192,18 @@ export const useDeleteCultivo = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("cultivos")
         .update({ activo: false })
-        .eq("id", id);
+        .eq("id", id)
+        .select()
+        .single();
 
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cultivosKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: cultivosKeys.all });
     },
   });
 };

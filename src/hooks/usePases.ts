@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../config/supabase";
-import type { Pase } from "../types/Pase";
+import type { PaseType } from "../types/Pase";
 
 // Query keys
 export const pasesKeys = {
@@ -16,8 +16,22 @@ export const pasesKeys = {
 const cleanPaseData = (data: any) => {
   const cleaned = { ...data };
 
+  // Handle cultivos_id as array
+  if (Array.isArray(cleaned.cultivos_id)) {
+    // If empty array, set to null
+    if (cleaned.cultivos_id.length === 0) {
+      cleaned.cultivos_id = null;
+    }
+    // If has values, keep as array
+  } else if (!cleaned.cultivos_id || cleaned.cultivos_id === "") {
+    cleaned.cultivos_id = null;
+  } else if (typeof cleaned.cultivos_id === "string") {
+    // Convert single string to array
+    cleaned.cultivos_id = [cleaned.cultivos_id];
+  }
+
   // UUID fields - convert empty strings to null
-  const uuidFields = ["paciente_id", "medico_id", "cultivos_id"];
+  const uuidFields = ["paciente_id", "medico_id"];
   uuidFields.forEach(field => {
     if (!cleaned[field] || cleaned[field] === "") {
       cleaned[field] = null;
@@ -28,6 +42,9 @@ const cleanPaseData = (data: any) => {
   delete cleaned.fecha_creacion;
   delete cleaned.fecha_modificacion;
   delete cleaned.id;
+
+  // Remove cultivos if it exists (it's computed data, not a DB field)
+  delete cleaned.cultivos;
 
   return cleaned;
 };
@@ -43,12 +60,12 @@ export const usePases = () => {
         .order("fecha_creacion", { ascending: false });
 
       if (error) throw error;
-      return data as Pase[];
+      return data as PaseType[];
     },
   });
 };
 
-// Get pase by ID
+// Get pase by ID with related cultivos
 export const usePase = (id: string) => {
   return useQuery({
     queryKey: pasesKeys.detail(id),
@@ -60,9 +77,22 @@ export const usePase = (id: string) => {
         .single();
 
       if (error) throw error;
-      return data as Pase;
+
+      // Transform data to include cultivos as an array
+      const paseWithCultivos = {
+        ...data,
+        cultivos: data.cultivos
+          ? Array.isArray(data.cultivos)
+            ? data.cultivos
+            : [data.cultivos]
+          : [],
+      };
+
+      return paseWithCultivos as PaseType & {
+        cultivos: Array<{ id: string; nombre: string }>;
+      };
     },
-    enabled: !!id,
+    enabled: Boolean(id),
   });
 };
 
@@ -72,7 +102,7 @@ export const useCreatePase = () => {
 
   return useMutation({
     mutationFn: async (
-      newPase: Omit<Pase, "id" | "fecha_creacion" | "fecha_modificacion">
+      newPase: Omit<PaseType, "id" | "fecha_creacion" | "fecha_modificacion">
     ) => {
       // Clean the data before inserting
       const cleanedPase = cleanPaseData(newPase);
@@ -84,7 +114,7 @@ export const useCreatePase = () => {
         .single();
 
       if (error) throw error;
-      return data as Pase;
+      return data as PaseType;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: pasesKeys.lists() });
@@ -97,7 +127,10 @@ export const useUpdatePase = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Pase> & { id: string }) => {
+    mutationFn: async ({
+      id,
+      ...updates
+    }: Partial<PaseType> & { id: string }) => {
       // Clean the data before updating
       const cleanedUpdates = cleanPaseData(updates);
 
@@ -109,7 +142,7 @@ export const useUpdatePase = () => {
         .single();
 
       if (error) throw error;
-      return data as Pase;
+      return data as PaseType;
     },
     onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: pasesKeys.lists() });

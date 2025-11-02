@@ -12,12 +12,12 @@ import {
   Box,
   Button,
   Card,
+  CardActions,
   CardContent,
   CardHeader,
   Chip,
   Divider,
   Grid,
-  Paper,
   Tooltip,
   Typography,
   useMediaQuery,
@@ -155,85 +155,73 @@ const CardPase = ({
       />
 
       <CardContent sx={{ pt: 0 }}>
-        {/* Último pase destacado */}
-        <Paper
-          sx={{
-            p: 3,
-            mb: 2,
-            backgroundColor: "primary.main",
-            color: "white",
-            borderRadius: 2,
-            cursor: "pointer",
-            "&:hover": {
-              opacity: 0.9,
-            },
-          }}
-          onClick={() => handleVerDetallePase(pasePaciente.ultimoPase.id)}
-        >
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
-            Último Pase - {formatFecha(pasePaciente.ultimoPase.fecha_creacion)}
-          </Typography>
-          <Typography
-            variant="subtitle1"
-            gutterBottom
-            sx={{ fontWeight: "medium" }}
+        <Accordion>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="panel1-content"
+            id="panel1-header"
           >
-            {pasePaciente.ultimoPase.principal || "Sin diagnóstico principal"}
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.9, mb: 2 }}>
-            {pasePaciente.ultimoPase.actualmente ||
-              "Sin información del estado actual"}
-          </Typography>
+            <Box sx={{ display: "flex", flexDirection: "column" }}>
+              <Typography variant="body1" sx={{ fontWeight: "bold", mr: 1 }}>
+                Actualmente
+              </Typography>
+              <Typography component="span">
+                {pasePaciente.ultimoPase.actualmente ||
+                  "Sin información del estado actual"}
+              </Typography>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography variant="body1" sx={{ fontWeight: "bold", mr: 1 }}>
+              Principal
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              gutterBottom
+              sx={{ fontWeight: "medium" }}
+            >
+              {pasePaciente.ultimoPase.principal || "Sin diagnóstico principal"}
+            </Typography>
 
-          {pasePaciente.ultimoPase.pendientes && (
+            <Typography variant="body1" sx={{ fontWeight: "bold", mr: 1 }}>
+              Pendientes
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+              {pasePaciente.ultimoPase.pendientes}
+            </Typography>
+
             <Box
               sx={{
+                display: "flex",
+                gap: 2,
                 mt: 2,
                 pt: 2,
                 borderTop: "1px solid rgba(255,255,255,0.2)",
               }}
             >
-              <Typography variant="body2" sx={{ fontWeight: "medium", mb: 1 }}>
-                Pendientes:
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                {pasePaciente.ultimoPase.pendientes}
-              </Typography>
+              {pasePaciente.ultimoPase.gcs_rass && (
+                <Chip
+                  label={`GCS/RASS: ${pasePaciente.ultimoPase.gcs_rass}`}
+                  size="small"
+                  sx={{
+                    backgroundColor: "rgba(255,255,255,0.2)",
+                    color: "white",
+                  }}
+                />
+              )}
+              {pasePaciente.ultimoPase.atb && (
+                <Chip
+                  label={`ATB: ${pasePaciente.ultimoPase.atb}`}
+                  size="small"
+                  sx={{
+                    backgroundColor: "rgba(255,255,255,0.2)",
+                    color: "white",
+                  }}
+                />
+              )}
             </Box>
-          )}
-
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              mt: 2,
-              pt: 2,
-              borderTop: "1px solid rgba(255,255,255,0.2)",
-            }}
-          >
-            {pasePaciente.ultimoPase.gcs_rass && (
-              <Chip
-                label={`GCS/RASS: ${pasePaciente.ultimoPase.gcs_rass}`}
-                size="small"
-                sx={{
-                  backgroundColor: "rgba(255,255,255,0.2)",
-                  color: "white",
-                }}
-              />
-            )}
-            {pasePaciente.ultimoPase.atb && (
-              <Chip
-                label={`ATB: ${pasePaciente.ultimoPase.atb}`}
-                size="small"
-                sx={{
-                  backgroundColor: "rgba(255,255,255,0.2)",
-                  color: "white",
-                }}
-              />
-            )}
-          </Box>
-        </Paper>
-
+          </AccordionDetails>
+        </Accordion>
         {/* Acordeón con pases anteriores */}
         {pasePaciente.pasesAnteriores.length > 0 && (
           <Accordion
@@ -345,6 +333,14 @@ const CardPase = ({
           </Accordion>
         )}
       </CardContent>
+      <CardActions>
+        <Button
+          onClick={() => handleVerDetallePase(pasePaciente.ultimoPase.id)}
+          size="small"
+        >
+          Ver Pase
+        </Button>
+      </CardActions>
     </Card>
   );
 };

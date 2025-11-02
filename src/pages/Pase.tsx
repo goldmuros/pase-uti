@@ -1,662 +1,367 @@
-import { usePase, useUpdatePase } from "@/hooks/usePases";
+import { useGetCultivosPorPaciente } from "@/hooks/useCultivos";
+import { useMedicos } from "@/hooks/useMedicos";
+import { usePacientes } from "@/hooks/usePacientes";
+import { useCreatePase, usePase } from "@/hooks/usePases";
+import type { PaseType } from "@/types/Pase";
 import {
-  ArrowBack as ArrowBackIcon,
-  Assignment as AssignmentIcon,
-  Bed as BedIcon,
-  Clear as ClearIcon,
-  Save as SaveIcon,
-} from "@mui/icons-material";
-import {
-  Alert,
   Box,
   Button,
-  Card,
-  CardContent,
+  Chip,
   Container,
-  Grid,
-  IconButton,
-  Paper,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
   TextField,
-  Tooltip,
   Typography,
-  useMediaQuery,
-  useTheme,
+  type SelectChangeEvent,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import type { Pase as IPase } from "../types/Pase";
+import { CULTIVOS } from "./Cultivo";
 
-const defaultData: Omit<IPase, "id" | "fecha_creacion"> = {
-  paciente_id: "",
-  medico_id: "",
-  principal: "",
+const DEFAULT_PASE: Omit<PaseType, "id" | "fecha_creacion"> = {
   antecedentes: "",
   gcs_rass: "",
-  cultivos_id: "",
   atb: "",
   vc_cook: "",
   actualmente: "",
   pendientes: "",
+  paciente_id: "",
+  principal: "",
+  medico_id: "",
+  cultivos_id: [],
   fecha_modificacion: "",
 };
 
-const Pase = () => {
+const Pase = (): ReactNode => {
+  const { id: paseId = "" } = useParams();
   const navigate = useNavigate();
-  const { id } = useParams(); // id is pase id
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const createPase = useCreatePase();
 
-  const { data: pase, isLoading, error } = usePase(id || "");
-  const updatePase = useUpdatePase();
+  const [formPase, setFormPase] =
+    useState<Omit<PaseType, "id" | "fecha_creacion">>(DEFAULT_PASE);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  const [formData, setFormData] = useState(defaultData);
-  const [submitMessage, setSubmitMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [fechaCreacion, setFechaCreacion] = useState("");
+  // Primero obtener el pase
+  const { data: pase } = usePase(paseId);
+  const { data: pacientes } = usePacientes({ todosPacientes: false });
+  const { data: medicos } = useMedicos();
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const paciente = {
-    id: urlParams.get("pacienteId") || "",
-    cama: urlParams.get("cama") || "",
-  };
+  // Obtener cultivos basado en el paciente_id del formulario
+  const { data: cultivos } = useGetCultivosPorPaciente(formPase.paciente_id);
 
-  // Función para generar fecha actual en formato YYYY-MM-DD HH:mm:ss
-  const getCurrentDateTime = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const seconds = String(now.getSeconds()).padStart(2, "0");
+  const hayPase = Boolean(paseId);
 
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  };
-
-  // Inicializar formulario
+  // Reset cuando cambia el paseId
   useEffect(() => {
-    if (pase) {
-      setFormData({
-        paciente_id: pase.paciente_id,
-        medico_id: pase.medico_id,
-        principal: pase.principal,
-        antecedentes: pase.antecedentes,
-        gcs_rass: pase.gcs_rass,
-        cultivos_id: pase.cultivos_id,
-        atb: pase.atb,
-        vc_cook: pase.vc_cook,
-        actualmente: pase.actualmente,
-        pendientes: pase.pendientes,
-        fecha_modificacion: pase.fecha_modificacion,
-      });
-      setFechaCreacion(pase.fecha_creacion);
-      setIsEditing(true);
-    } else if (!id) {
-      // New pase
-      const currentTime = getCurrentDateTime();
-      setFormData(prev => ({
-        ...prev,
-        paciente_id: paciente.id,
-      }));
-      setFechaCreacion(currentTime);
-    }
-  }, [pase, id, paciente.id]);
+    setIsInitialized(false);
+    setFormPase(DEFAULT_PASE);
+  }, [paseId]);
 
-  // Manejar cambios en los campos
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setFormData(prev => ({
+  useEffect(() => {
+    if (!pase || !paseId || isInitialized) return;
+
+    const newCultivosId = Array.isArray(pase.cultivos_id)
+      ? pase.cultivos_id
+      : pase.cultivos_id
+        ? [pase.cultivos_id]
+        : [];
+
+    const newFormData = {
+      antecedentes: pase.antecedentes || "",
+      gcs_rass: pase.gcs_rass || "",
+      atb: pase.atb || "",
+      vc_cook: pase.vc_cook || "",
+      actualmente: pase.actualmente || "",
+      pendientes: pase.pendientes || "",
+      paciente_id: pase.paciente_id || "",
+      principal: pase.principal || "",
+      medico_id: pase.medico_id || "",
+      cultivos_id: newCultivosId,
+      fecha_modificacion: pase.fecha_modificacion || "",
+    };
+
+    setFormPase(newFormData);
+    setIsInitialized(true);
+  }, [pase, paseId, isInitialized]);
+
+  const handleChange =
+    (field: keyof typeof formPase) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setFormPase(prev => ({
+        ...prev,
+        [field]: event.target.value,
+      }));
+    };
+
+  const handlePacienteChange = (pacienteId: string) => {
+    setFormPase(prev => ({
       ...prev,
-      [name]: value,
+      paciente_id: pacienteId,
+      // Limpiar cultivos seleccionados al cambiar de paciente
+      cultivos_id: [],
     }));
   };
 
-  // Manejar envío del formulario
+  const handleCultivosChange = (event: SelectChangeEvent<string[]>) => {
+    const value = event.target.value;
+    setFormPase(prev => ({
+      ...prev,
+      cultivos_id: typeof value === "string" ? value.split(",") : value,
+    }));
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setIsSubmitting(true);
-    setSubmitMessage("");
+
+    const cleanedData = {
+      ...formPase,
+      cultivos_id:
+        formPase.cultivos_id && formPase.cultivos_id.length > 0
+          ? formPase.cultivos_id
+          : null,
+    };
 
     try {
-      // Validar campos requeridos
-      if (!formData.paciente_id) {
-        setSubmitMessage("Error: ID del paciente es requerido");
-        return;
-      }
+      await createPase.mutateAsync({
+        ...cleanedData,
+      });
 
-      if (!formData.principal.trim()) {
-        setSubmitMessage("Error: El diagnóstico principal es requerido");
-        return;
-      }
-
-      if (isEditing && id) {
-        // Update existing pase
-        await updatePase.mutateAsync({
-          id,
-          ...formData,
-          fecha_modificacion: getCurrentDateTime(),
-        });
-        setSubmitMessage("Pase médico actualizado exitosamente");
-      } else {
-        // This should not happen in this component, as new pases are created in NuevoPase
-        setSubmitMessage(
-          "Error: Esta página es solo para ver/editar pases existentes"
-        );
-      }
-
-      // Opcional: redirigir después del éxito
-      setTimeout(() => {
-        navigate(`/pases`);
-      }, 2000);
+      navigate("/pases");
     } catch (error) {
-      setSubmitMessage(
-        `Error al ${isEditing ? "actualizar" : "crear"} el pase médico: ${error instanceof Error ? error.message : String(error)}`
-      );
-    } finally {
-      setIsSubmitting(false);
+      console.error("Error creating pase:", error);
     }
   };
 
-  // Función para resetear el formulario
-  const resetForm = () => {
-    setFormData({
-      ...defaultData,
-      paciente_id: paciente.id,
-    });
-    setSubmitMessage("");
+  const handleCancel = () => {
+    navigate("/pases");
   };
-
-  const handleGoBack = () => {
-    navigate(-1);
-  };
-
-  const formatFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
-        <Typography>Cargando pase médico...</Typography>
-      </Container>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="error">Error al cargar el pase: {error.message}</Alert>
-        <Button onClick={handleGoBack} sx={{ mt: 2 }}>
-          Volver
-        </Button>
-      </Container>
-    );
-  }
 
   return (
-    <Container
-      maxWidth="lg"
-      sx={{
-        px: { xs: 2, sm: 3, md: 4 },
-        py: { xs: 2, sm: 3 },
-        width: "100%",
-        maxWidth: "100% !important",
-      }}
-    >
-      {/* Header con botón de regreso - Responsive */}
-      <Box
-        sx={{
-          mb: { xs: 3, sm: 4 },
-          display: "flex",
-          alignItems: "center",
-          flexDirection: { xs: "column", sm: "row" },
-          textAlign: { xs: "center", sm: "left" },
-          gap: { xs: 1, sm: 0 },
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            width: { xs: "100%", sm: "auto" },
-          }}
-        >
-          <Tooltip title="Volver atrás">
-            <IconButton onClick={handleGoBack} sx={{ mr: { xs: 1, sm: 2 } }}>
-              <ArrowBackIcon />
-            </IconButton>
-          </Tooltip>
-          <Typography
-            variant={isMobile ? "h5" : "h4"}
-            sx={{
-              fontWeight: "bold",
-              color: "primary.main",
-              flexGrow: 1,
-              fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
-            }}
-          >
-            <AssignmentIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-            {isEditing ? "Ver Pase Médico" : "Nuevo Pase Médico"}
-          </Typography>
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        {hayPase ? "Ver" : "Crear Nuevo"} Pase Médico
+      </Typography>
+
+      <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+        <Box sx={{ mb: 3 }}>
+          <FormControl fullWidth required>
+            <InputLabel>Paciente</InputLabel>
+            <Select
+              label="Paciente"
+              disabled={hayPase}
+              value={formPase.paciente_id}
+              onChange={event => handlePacienteChange(event.target.value)}
+            >
+              {pacientes?.map(paciente => (
+                <MenuItem key={paciente.id} value={paciente.id}>
+                  {paciente.nombre} {paciente.apellido}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Box>
-        {paciente.cama && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              mt: { xs: 1, sm: 0 },
-              ml: { sm: 2 },
-            }}
-          >
-            <BedIcon sx={{ mr: 1, color: "text.secondary" }} />
-            <Typography
-              variant={isMobile ? "body1" : "h6"}
-              color="text.secondary"
-              sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
+
+        <Box sx={{ mb: 3 }}>
+          <FormControl fullWidth required>
+            <InputLabel>Médico</InputLabel>
+            <Select
+              label="Médico"
+              disabled={hayPase}
+              value={formPase.medico_id}
+              onChange={event =>
+                setFormPase(prev => ({
+                  ...prev,
+                  medico_id: event.target.value,
+                }))
+              }
             >
-              Cama: {paciente.cama}
-            </Typography>
-          </Box>
-        )}
-      </Box>
+              {medicos?.map(medico => (
+                <MenuItem key={medico.id} value={medico.id}>
+                  {medico.nombre} {medico.apellido}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
 
-      {/* Información del paciente - Responsive */}
-      <Card
-        sx={{
-          mb: { xs: 3, sm: 4 },
-          borderRadius: 2,
-          boxShadow: 2,
-          overflow: "hidden",
-        }}
-      >
-        <CardContent
-          sx={{
-            p: { xs: 2, sm: 3 },
-            backgroundColor: "primary.main",
-            color: "white",
-          }}
-        >
-          <Grid container spacing={{ xs: 2, sm: 3 }} alignItems="center">
-            <Grid sx={{ xs: 12, sm: 6 }}>
-              <Typography
-                variant={isMobile ? "h6" : "h5"}
-                gutterBottom
-                sx={{ fontSize: { xs: "1.1rem", sm: "1.25rem" } }}
-              >
-                Información del Paciente
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  opacity: 0.9,
-                  fontSize: { xs: "0.875rem", sm: "1rem" },
-                }}
-              >
-                ID: {paciente.id}
-              </Typography>
-            </Grid>
-            <Grid
-              sx={{ textAlign: { xs: "left", sm: "right" }, xs: 12, sm: 6 }}
-            >
-              <Typography
-                variant="body2"
-                sx={{
-                  opacity: 0.9,
-                  fontSize: { xs: "0.875rem", sm: "1rem" },
-                }}
-              >
-                Fecha de Creación
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
-              >
-                {formatFecha(fechaCreacion)}
-              </Typography>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-
-      {/* Alert de mensajes */}
-      {submitMessage && (
-        <Alert
-          severity={submitMessage.includes("Error") ? "error" : "success"}
-          sx={{ mb: 3, borderRadius: 2 }}
-          onClose={() => setSubmitMessage("")}
-        >
-          {submitMessage}
-        </Alert>
-      )}
-
-      {/* Formulario - Responsive */}
-      <Paper
-        sx={{
-          p: { xs: 2, sm: 3, md: 4 },
-          borderRadius: 2,
-          boxShadow: 2,
-        }}
-      >
-        <Box component="form" onSubmit={handleSubmit} noValidate>
-          <Grid container spacing={4}>
-            {/* Diagnóstico Principal */}
-            <Grid sx={{ xs: 12 }}>
-              <Typography
-                variant={isMobile ? "h6" : "h5"}
-                gutterBottom
-                color="primary"
-                sx={{
-                  fontWeight: "bold",
-                  fontSize: { xs: "1.1rem", sm: "1.25rem" },
-                }}
-              >
-                Diagnóstico Principal *
-              </Typography>
-              <TextField
-                fullWidth
-                name="principal"
-                value={formData.principal}
-                onChange={handleChange}
-                variant="outlined"
-                required
-                disabled={isEditing}
-                placeholder="Ingrese el diagnóstico principal del paciente"
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-            </Grid>
-
-            {/* Médico */}
-            <Grid sx={{ xs: 12, md: 6 }}>
-              <Typography
-                variant="subtitle1"
-                gutterBottom
-                sx={{ fontWeight: "medium" }}
-              >
-                Médico ID
-              </Typography>
-              <TextField
-                fullWidth
-                name="medico_id"
-                value={formData.medico_id}
-                onChange={handleChange}
-                variant="outlined"
-                placeholder="ID del médico responsable"
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-            </Grid>
-
-            {/* Información Clínica Principal */}
-            <Grid sx={{ xs: 12 }}>
-              <Typography
-                variant="h6"
-                gutterBottom
-                color="primary"
-                sx={{ fontWeight: "bold", mt: 2 }}
-              >
-                Información Clínica
-              </Typography>
-            </Grid>
-
-            <Grid sx={{ xs: 12, md: 6 }}>
-              <Typography
-                variant="subtitle1"
-                gutterBottom
-                sx={{ fontWeight: "medium" }}
-              >
-                Antecedentes
-              </Typography>
-              <TextField
-                fullWidth
-                name="antecedentes"
-                value={formData.antecedentes}
-                onChange={handleChange}
-                variant="outlined"
-                multiline
-                rows={4}
-                placeholder="Antecedentes médicos relevantes del paciente"
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-            </Grid>
-
-            <Grid sx={{ xs: 12, md: 6 }}>
-              <Typography
-                variant="subtitle1"
-                gutterBottom
-                sx={{ fontWeight: "medium" }}
-              >
-                Estado Actual
-              </Typography>
-              <TextField
-                fullWidth
-                name="actualmente"
-                value={formData.actualmente}
-                onChange={handleChange}
-                variant="outlined"
-                multiline
-                rows={4}
-                placeholder="Descripción del estado actual del paciente"
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-            </Grid>
-
-            <Grid sx={{ xs: 12 }}>
-              <Typography
-                variant="subtitle1"
-                gutterBottom
-                sx={{ fontWeight: "medium" }}
-              >
-                Pendientes
-              </Typography>
-              <TextField
-                fullWidth
-                name="pendientes"
-                value={formData.pendientes}
-                onChange={handleChange}
-                variant="outlined"
-                multiline
-                rows={3}
-                placeholder="Tareas pendientes, estudios por realizar, seguimientos necesarios"
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-            </Grid>
-
-            {/* Parámetros Clínicos */}
-            <Grid sx={{ xs: 12 }}>
-              <Typography
-                variant="h6"
-                gutterBottom
-                color="primary"
-                sx={{ fontWeight: "bold", mt: 2 }}
-              >
-                Parámetros Clínicos
-              </Typography>
-            </Grid>
-
-            <Grid sx={{ xs: 12, md: 4 }}>
-              <Typography
-                variant="subtitle1"
-                gutterBottom
-                sx={{ fontWeight: "medium" }}
-              >
-                GCS/RASS
-              </Typography>
-              <TextField
-                fullWidth
-                name="gcs_rass"
-                value={formData.gcs_rass}
-                onChange={handleChange}
-                variant="outlined"
-                placeholder="Ej: 15/0"
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-            </Grid>
-
-            <Grid sx={{ xs: 12, md: 4 }}>
-              <Typography
-                variant="subtitle1"
-                gutterBottom
-                sx={{ fontWeight: "medium" }}
-              >
-                ATB
-              </Typography>
-              <TextField
-                fullWidth
-                name="atb"
-                value={formData.atb}
-                onChange={handleChange}
-                variant="outlined"
-                placeholder="Antibiótico principal"
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-            </Grid>
-
-            <Grid sx={{ xs: 12, md: 4 }}>
-              <Typography
-                variant="subtitle1"
-                gutterBottom
-                sx={{ fontWeight: "medium" }}
-              >
-                VC Cook
-              </Typography>
-              <TextField
-                fullWidth
-                name="vc_cook"
-                value={formData.vc_cook}
-                onChange={handleChange}
-                variant="outlined"
-                placeholder="Valor Cook"
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-            </Grid>
-
-            {/* Tratamiento */}
-            <Grid sx={{ xs: 12 }}>
-              <Typography
-                variant="h6"
-                gutterBottom
-                color="primary"
-                sx={{ fontWeight: "bold", mt: 2 }}
-              >
-                Tratamiento
-              </Typography>
-            </Grid>
-
-            <Grid sx={{ xs: 12 }}>
-              <Typography
-                variant="subtitle1"
-                gutterBottom
-                sx={{ fontWeight: "medium" }}
-              >
-                Cultivos ID
-              </Typography>
-              <TextField
-                fullWidth
-                name="cultivos_id"
-                value={formData.cultivos_id}
-                onChange={handleChange}
-                variant="outlined"
-                placeholder="ID del cultivo asociado"
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-            </Grid>
-
-            {/* Botones de acción - Responsive */}
-            <Grid sx={{ xs: 12 }}>
+        <Box sx={{ mb: 3 }}>
+          <FormControl fullWidth disabled={!formPase.paciente_id}>
+            <InputLabel>Cultivos</InputLabel>
+            {hayPase ? (
               <Box
                 sx={{
+                  minHeight: 56,
+                  borderRadius: 1,
+                  padding: "16.5px 14px",
                   display: "flex",
-                  flexDirection: { xs: "column", sm: "row" },
-                  gap: { xs: 2, sm: 2 },
-                  justifyContent: "center",
-                  mt: { xs: 3, sm: 4 },
+                  flexWrap: "wrap",
                   alignItems: "center",
                 }}
               >
-                <Button
-                  type="submit"
-                  variant="contained"
-                  size={isMobile ? "medium" : "large"}
-                  disabled={isSubmitting}
-                  startIcon={<SaveIcon />}
-                  fullWidth={isMobile}
-                  sx={{
-                    borderRadius: 2,
-                    px: { xs: 3, sm: 4 },
-                    py: { xs: 1.25, sm: 1.5 },
-                    fontWeight: "bold",
-                    fontSize: { xs: "0.875rem", sm: "1rem" },
-                  }}
-                >
-                  {isSubmitting ? "Guardando..." : "Crear Pase"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outlined"
-                  size={isMobile ? "medium" : "large"}
-                  onClick={resetForm}
-                  disabled={isSubmitting}
-                  startIcon={<ClearIcon />}
-                  fullWidth={isMobile}
-                  sx={{
-                    borderRadius: 2,
-                    px: { xs: 3, sm: 4 },
-                    py: { xs: 1.25, sm: 1.5 },
-                    fontWeight: "bold",
-                    fontSize: { xs: "0.875rem", sm: "1rem" },
-                  }}
-                >
-                  Limpiar Formulario
-                </Button>
+                <Box sx={{ mt: 2 }}>
+                  {cultivos &&
+                  formPase.cultivos_id &&
+                  formPase.cultivos_id.length > 0 ? (
+                    cultivos.map(cultivo => (
+                      <Chip
+                        key={cultivo.id}
+                        label={
+                          CULTIVOS.filter(
+                            filterCultivo => filterCultivo.id === cultivo.nombre
+                          )[0].nombre
+                        }
+                        size="small"
+                        color="info"
+                      />
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No hay cultivos seleccionados
+                    </Typography>
+                  )}
+                </Box>
               </Box>
-            </Grid>
-          </Grid>
+            ) : (
+              <Select
+                multiple
+                label="Cultivos"
+                value={formPase.cultivos_id || []}
+                onChange={handleCultivosChange}
+                renderValue={selected => (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {selected.map(value => {
+                      const cultivo = cultivos?.find(c => c.id === value);
+                      return (
+                        <Chip
+                          key={value}
+                          label={cultivo?.nombre || value}
+                          size="small"
+                        />
+                      );
+                    })}
+                  </Box>
+                )}
+              >
+                {cultivos && cultivos.length > 0 ? (
+                  cultivos.map(cultivo => (
+                    <MenuItem key={cultivo.id} value={cultivo.id}>
+                      {cultivo.nombre}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>
+                    <em>No hay cultivos para este paciente</em>
+                  </MenuItem>
+                )}
+              </Select>
+            )}
+          </FormControl>
         </Box>
-      </Paper>
+
+        <Box sx={{ mb: 3 }}>
+          <TextField
+            fullWidth
+            label="Diagnóstico Principal"
+            required
+            value={formPase.principal}
+            onChange={handleChange("principal")}
+            disabled={hayPase}
+          />
+        </Box>
+
+        <Box sx={{ mb: 3 }}>
+          <TextField
+            fullWidth
+            label="Antecedentes"
+            multiline
+            rows={2}
+            value={formPase.antecedentes}
+            onChange={handleChange("antecedentes")}
+            disabled={hayPase}
+          />
+        </Box>
+
+        <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
+          <Box sx={{ flex: 1, minWidth: 300 }}>
+            <TextField
+              fullWidth
+              label="Estado Actual"
+              multiline
+              rows={2}
+              value={formPase.actualmente}
+              onChange={handleChange("actualmente")}
+              disabled={hayPase}
+            />
+          </Box>
+
+          <Box sx={{ flex: 1, minWidth: 300 }}>
+            <TextField
+              fullWidth
+              label="Pendientes"
+              multiline
+              rows={2}
+              value={formPase.pendientes}
+              onChange={handleChange("pendientes")}
+              disabled={hayPase}
+            />
+          </Box>
+        </Box>
+
+        <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
+          <Box sx={{ flex: 1, minWidth: 200 }}>
+            <TextField
+              fullWidth
+              label="GCS/RASS"
+              multiline
+              rows={2}
+              value={formPase.gcs_rass}
+              onChange={handleChange("gcs_rass")}
+              disabled={hayPase}
+            />
+          </Box>
+
+          <Box sx={{ flex: 1, minWidth: 200 }}>
+            <TextField
+              fullWidth
+              label="ATB"
+              multiline
+              rows={2}
+              value={formPase.atb}
+              onChange={handleChange("atb")}
+              disabled={hayPase}
+            />
+          </Box>
+
+          <Box sx={{ flex: 1, minWidth: 200 }}>
+            <TextField
+              fullWidth
+              label="VC Cook"
+              multiline
+              value={formPase.vc_cook}
+              onChange={handleChange("vc_cook")}
+              disabled={hayPase}
+            />
+          </Box>
+        </Box>
+
+        <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
+          {!hayPase && (
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={createPase.isPending}
+            >
+              Crear Pase
+            </Button>
+          )}
+          <Button variant="outlined" onClick={handleCancel}>
+            Cancelar
+          </Button>
+        </Box>
+      </Box>
     </Container>
   );
 };

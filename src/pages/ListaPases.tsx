@@ -24,14 +24,14 @@ import {
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import type { Paciente } from "../types/Paciente";
-import type { Pase } from "../types/Pase";
+import type { PaseType } from "../types/Pase";
 
 // Interface para pases agrupados por paciente
 export interface PasesPorPaciente {
   paciente: Paciente;
-  pases: Pase[];
-  ultimoPase: Pase;
-  pasesAnteriores: Pase[];
+  pases: PaseType[];
+  ultimoPase: PaseType;
+  pasesAnteriores: PaseType[];
 }
 
 // Hook personalizado para obtener pases agrupados por paciente
@@ -54,9 +54,9 @@ const usePasesAgrupadosData = (pacientes: Paciente[] | undefined) => {
   }
 
   // Agrupar pases por paciente
-  const pasesAgrupados: { [pacienteId: string]: Pase[] } = {};
+  const pasesAgrupados: { [pacienteId: string]: PaseType[] } = {};
 
-  pases.forEach((pase: Pase) => {
+  pases.forEach((pase: PaseType) => {
     if (!pasesAgrupados[pase.paciente_id]) {
       pasesAgrupados[pase.paciente_id] = [];
     }
@@ -167,11 +167,6 @@ const ListaPases: React.FC = () => {
     );
   }
 
-  const totalPases = pasesFiltrados.reduce(
-    (sum, item) => sum + item.pases.length,
-    0
-  );
-
   return (
     <Container
       maxWidth="xl"
@@ -217,84 +212,6 @@ const ListaPases: React.FC = () => {
         </Typography>
       </Box>
 
-      {/* Estadísticas - Responsive */}
-      <Grid container spacing={{ xs: 1, sm: 2 }}>
-        <Grid sx={{ xs: 12, sm: 4, mb: { xs: 2, sm: 3 } }}>
-          <Paper
-            sx={{
-              p: { xs: 1.5, sm: 2 },
-              textAlign: "center",
-              backgroundColor: "primary.main",
-              color: "white",
-              borderRadius: 2,
-            }}
-          >
-            <Typography
-              variant={isMobile ? "h5" : "h4"}
-              sx={{ fontWeight: "bold" }}
-            >
-              {pasesFiltrados.length}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-            >
-              {pacienteId ? "Paciente" : "Pacientes con Pases"}
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid sx={{ xs: 12, sm: 4 }}>
-          <Paper
-            sx={{
-              p: { xs: 1.5, sm: 2 },
-              textAlign: "center",
-              backgroundColor: "text.secondary",
-              color: "white",
-              borderRadius: 2,
-            }}
-          >
-            <Typography
-              variant={isMobile ? "h5" : "h4"}
-              sx={{ fontWeight: "bold" }}
-            >
-              {totalPases}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-            >
-              Total de Pases
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid sx={{ xs: 12, sm: 4 }}>
-          <Paper
-            sx={{
-              p: { xs: 1.5, sm: 2 },
-              textAlign: "center",
-              backgroundColor: "success.main",
-              color: "white",
-              borderRadius: 2,
-            }}
-          >
-            <Typography
-              variant={isMobile ? "h5" : "h4"}
-              sx={{ fontWeight: "bold" }}
-            >
-              {pasesFiltrados.length > 0
-                ? Math.round((totalPases / pasesFiltrados.length) * 10) / 10
-                : 0}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-            >
-              Promedio por Paciente
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-
       {pasesFiltrados.length === 0 ? (
         <Paper
           sx={{ p: { xs: 3, sm: 4 }, textAlign: "center", borderRadius: 2 }}
@@ -324,25 +241,27 @@ const ListaPases: React.FC = () => {
       )}
 
       {/* Botón flotante para agregar pase - Responsive */}
-      <Tooltip title="Agregar nuevo pase">
-        <Fab
-          color="primary"
-          aria-label="add"
-          onClick={() => navigate("/pases/nuevo")}
-          sx={{
-            position: "fixed",
-            bottom: { xs: 16, sm: 24 },
-            right: { xs: 16, sm: 24 },
-            boxShadow: 4,
-            width: { xs: 48, sm: 56 },
-            height: { xs: 48, sm: 56 },
-            zIndex: theme.zIndex.speedDial,
-          }}
-          size={isMobile ? "medium" : "large"}
-        >
-          <AddIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
-        </Fab>
-      </Tooltip>
+      {pasesFiltrados.length > 0 && (
+        <Tooltip title="Agregar nuevo pase">
+          <Fab
+            color="primary"
+            aria-label="add"
+            onClick={() => navigate("/pases/nuevo")}
+            sx={{
+              position: "fixed",
+              bottom: { xs: 16, sm: 24 },
+              right: { xs: 16, sm: 24 },
+              boxShadow: 4,
+              width: { xs: 48, sm: 56 },
+              height: { xs: 48, sm: 56 },
+              zIndex: theme.zIndex.speedDial,
+            }}
+            size={isMobile ? "medium" : "large"}
+          >
+            <AddIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+          </Fab>
+        </Tooltip>
+      )}
     </Container>
   );
 };
