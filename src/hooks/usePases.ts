@@ -1,3 +1,5 @@
+import type { PasePaciente } from "@/components/Pases/CardPase";
+import { formatDateTimeLocal } from "@/utils/fechas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../config/supabase";
 import type { PaseType } from "../types/Pase";
@@ -50,17 +52,18 @@ const cleanPaseData = (data: any) => {
 };
 
 // Get all pases
-export const usePases = () => {
+export const usePases = (fechaFiltro: Date) => {
   return useQuery({
-    queryKey: pasesKeys.lists(),
+    queryKey: pasesKeys.list({ fecha: fechaFiltro }),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("pases")
-        .select("*")
-        .order("fecha_creacion", { ascending: false });
+        .select(`*,pacientes!inner ( id, nombre, apellido, cama )`)
+        .eq("fecha_creacion", formatDateTimeLocal(fechaFiltro.toString()))
+        .order("pacientes(cama)", { ascending: true });
 
       if (error) throw error;
-      return data as PaseType[];
+      return data as PasePaciente[];
     },
   });
 };

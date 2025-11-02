@@ -1,16 +1,7 @@
+import { formatDateTimeLocal } from "@/utils/fechas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../config/supabase";
 import type { Cultivos } from "../types/Cultivos";
-
-const formatDateTimeLocal = (dateString: string | null) => {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
 
 // Query keys
 export const cultivosKeys = {
@@ -52,7 +43,7 @@ export const useGetCultivosPorPaciente = (pacienteId?: string) => {
       pacienteId,
     }),
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("cultivos")
         .select("*")
         .eq("activo", true)
