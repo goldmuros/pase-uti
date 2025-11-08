@@ -2,7 +2,7 @@ export interface Paciente {
   id: string;
   nombre: string;
   apellido: string;
-  cama: string | null;
+  cama_id: string | null;
   motivo_ingreso: string;
   activo: boolean;
   fecha_ingreso: string;

@@ -104,13 +104,6 @@ const ListaPases: React.FC = () => {
   const { data: pacientes } = usePacientes({ todosPacientes: false });
   const { data: pases } = usePases(fechaFiltro || new Date());
 
-  console.log("hola", pases);
-
-  // Filtrar por paciente si se proporciona pacienteId
-  // const pasesFiltrados = pacienteId
-  //   ? pasesPorPaciente.filter(item => item.paciente.id === pacienteId)
-  //   : pasesPorPaciente;
-
   const pacienteFiltrado = pacienteId
     ? pacientes?.find(p => p.id === pacienteId)
     : null;

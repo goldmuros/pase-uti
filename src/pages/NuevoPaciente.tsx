@@ -1,3 +1,4 @@
+import { useCamas } from "@/hooks/useCamas";
 import { useCreatePaciente } from "@/hooks/usePacientes";
 import {
   Alert,
@@ -5,7 +6,11 @@ import {
   Button,
   Checkbox,
   Container,
+  FormControl,
   FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
   TextField,
   Typography,
 } from "@mui/material";
@@ -21,12 +26,15 @@ import type { Paciente } from "../types/Paciente";
 const NuevoPaciente = (): ReactNode => {
   const navigate = useNavigate();
   const createPaciente = useCreatePaciente();
+
+  const { data: camas = [] } = useCamas();
+
   const [formData, setFormData] = useState<
     Omit<Paciente, "id" | "created_at" | "updated_at">
   >({
     nombre: "",
     apellido: "",
-    cama: null,
+    cama_id: null,
     motivo_ingreso: "",
     activo: true,
     fecha_ingreso: new Date().toISOString().split("T")[0], // YYYY-MM-DD
@@ -45,6 +53,13 @@ const NuevoPaciente = (): ReactNode => {
         [field]: value,
       }));
     };
+
+  const handleCama = (camaId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      cama_id: camaId,
+    }));
+  };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -66,6 +81,9 @@ const NuevoPaciente = (): ReactNode => {
   const handleCancel = () => {
     navigate("/pacientes");
   };
+
+  // Filtrar camas disponibles
+  const camasDisponibles = camas.filter(cama => cama.disponible);
 
   return (
     <Container
@@ -120,14 +138,20 @@ const NuevoPaciente = (): ReactNode => {
         </Box>
 
         <Box sx={{ mb: 3 }}>
-          <TextField
-            fullWidth
-            label="Cama"
-            value={formData.cama}
-            onChange={handleChange("cama")}
-            size="small"
-            sx={{ maxWidth: { xs: "100%", sm: 200 } }}
-          />
+          <FormControl fullWidth required>
+            <InputLabel>Cama</InputLabel>
+            <Select
+              label="Cama"
+              value={formData.cama_id || ""}
+              onChange={event => handleCama(event.target.value)}
+            >
+              {camasDisponibles.map(cama => (
+                <MenuItem key={cama.id} value={cama.id}>
+                  Cama {cama.cama}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Box>
 
         <Box sx={{ mb: 3 }}>

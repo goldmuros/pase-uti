@@ -1,8 +1,10 @@
+import { useCamasConPaciente } from "@/hooks/useCamas";
 import { usePacientes } from "@/hooks/usePacientes";
 import {
   Add as AddIcon,
   Assignment as AssignmentIcon,
   Bed as BedIcon,
+  CheckCircle as CheckCircleIcon,
   LocalHospital as HospitalIcon,
   Person as PersonIcon,
   Science as ScienceIcon,
@@ -18,7 +20,6 @@ import {
   Container,
   Fab,
   Grid,
-  Paper,
   Skeleton,
   Tab,
   Tabs,
@@ -38,10 +39,22 @@ const ListaPacientes: React.FC = () => {
 
   const {
     data: pacientes,
-    isLoading,
-    error,
+    isLoading: loadingPacientes,
+    error: errorPacientes,
   } = usePacientes({ todosPacientes: true });
+
+  const {
+    data: camas,
+    isLoading: loadingCamas,
+    error: errorCamas,
+  } = useCamasConPaciente();
+
+  console.log("hola camas", camas);
+
   const [tabValue, setTabValue] = useState(0);
+
+  const isLoading = loadingPacientes || loadingCamas;
+  const error = errorPacientes || errorCamas;
 
   const irDetallePaciente = (pacienteId: string) => {
     navigate(`/pacientes/${pacienteId}`);
@@ -95,15 +108,16 @@ const ListaPacientes: React.FC = () => {
       >
         <Alert severity="error" sx={{ mb: 2 }}>
           <Typography variant="body2">
-            No se pudieron cargar los pacientes.
+            No se pudieron cargar los datos.
           </Typography>
         </Alert>
       </Container>
     );
   }
 
-  const pacientesActivos = pacientes?.filter(p => p.activo) ?? [];
-  const pacientesInactivos = pacientes?.filter(p => !p.activo) ?? [];
+  // const pacientesActivos = pacientes?.filter(paciente => paciente.activo) ?? [];
+  const pacientesInactivos =
+    pacientes?.filter(paciente => !paciente.activo) ?? [];
 
   return (
     <Container
@@ -136,177 +150,96 @@ const ListaPacientes: React.FC = () => {
           }}
         >
           <HospitalIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-          Gestión de Pacientes
+          Gestión de Camas y Pacientes
         </Typography>
       </Box>
 
-      {/* Estadísticas rápidas - Responsive */}
-      <Grid
-        container
-        spacing={{ xs: 1, sm: 2 }}
-        sx={{ mb: { xs: 2, sm: 3, md: 4 } }}
+      <Tabs
+        value={tabValue}
+        onChange={(_event, newValue) => setTabValue(newValue)}
+        sx={{ mb: { xs: 2, sm: 3 } }}
       >
-        <Grid sx={{ xs: 12, sm: 4 }}>
-          <Paper
-            sx={{
-              p: { xs: 1.5, sm: 2 },
-              textAlign: "center",
-              backgroundColor: "primary.main",
-              color: "white",
-              borderRadius: 2,
-            }}
-          >
-            <Typography
-              variant={isMobile ? "h5" : "h4"}
-              sx={{ fontWeight: "bold" }}
-            >
-              {pacientesActivos.length}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-            >
-              Pacientes Activos
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
-          <Paper
-            sx={{
-              p: { xs: 1.5, sm: 2 },
-              textAlign: "center",
-              backgroundColor: "text.secondary",
-              color: "white",
-              borderRadius: 2,
-            }}
-          >
-            <Typography
-              variant={isMobile ? "h5" : "h4"}
-              sx={{ fontWeight: "bold" }}
-            >
-              {pacientesInactivos.length}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-            >
-              Pacientes Inactivos
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
-          <Paper
-            sx={{
-              p: { xs: 1.5, sm: 2 },
-              textAlign: "center",
-              backgroundColor: "success.main",
-              color: "white",
-              borderRadius: 2,
-            }}
-          >
-            <Typography
-              variant={isMobile ? "h5" : "h4"}
-              sx={{ fontWeight: "bold" }}
-            >
-              {pacientes?.length ?? 0}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-            >
-              Total de Pacientes
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
+        <Tab label={`Vista de Camas (${camas?.length || 0})`} />
+        <Tab label={`Pacientes Inactivos (${pacientesInactivos.length})`} />
+      </Tabs>
 
-      {pacientes?.length === 0 ? (
-        <Paper sx={{ p: { xs: 3, sm: 4 }, textAlign: "center" }}>
-          <PersonIcon
-            sx={{
-              fontSize: { xs: 48, sm: 64 },
-              color: "text.secondary",
-              mb: 2,
-            }}
-          />
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            No hay pacientes registrados
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Comience agregando un nuevo paciente al sistema.
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={agregarNuevoPaciente}
-            sx={{ borderRadius: 2 }}
-            size={isMobile ? "medium" : "large"}
-          >
-            Agregar Primer Paciente
-          </Button>
-        </Paper>
-      ) : (
-        <>
-          <Tabs
-            value={tabValue}
-            onChange={(_event, newValue) => setTabValue(newValue)}
-            sx={{ mb: { xs: 2, sm: 3 } }}
-          >
-            <Tab label={`Activos (${pacientesActivos.length})`} />
-            <Tab label={`Inactivos (${pacientesInactivos.length})`} />
-          </Tabs>
+      {/* Tab 0: Vista de todas las camas */}
+      {tabValue === 0 && camas && (
+        <Grid container spacing={{ xs: 2, sm: 3 }}>
+          {camas.map(cama => {
+            const estaOcupada = !cama.disponible;
+            const estaDisponible = cama.disponible;
 
-          {tabValue === 0 && pacientesActivos.length > 0 && (
-            <Grid container spacing={{ xs: 2, sm: 3 }}>
-              {pacientesActivos.map(paciente => (
-                <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={paciente.id}>
-                  <Card
-                    elevation={2}
-                    sx={{
-                      cursor: "pointer",
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      borderRadius: 2,
-                      "&:hover": {
-                        boxShadow: 4,
-                        transform: "translateY(-2px)",
-                        transition: "all 0.2s ease-in-out",
-                      },
-                    }}
-                    onClick={() => irDetallePaciente(paciente.id)}
-                  >
-                    <CardHeader
-                      avatar={
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <PersonIcon color="primary" />
-                        </Box>
-                      }
-                      title={
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            flexWrap: "wrap",
-                          }}
+            return (
+              <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={cama.id}>
+                <Card
+                  elevation={2}
+                  sx={{
+                    cursor: estaOcupada ? "pointer" : "default",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    borderRadius: 2,
+                    bgcolor: estaDisponible ? "success.50" : "background.paper",
+                    border: estaDisponible ? "2px solid" : "none",
+                    borderColor: estaDisponible
+                      ? "success.main"
+                      : "transparent",
+                    "&:hover": estaOcupada
+                      ? {
+                          boxShadow: 4,
+                          transform: "translateY(-2px)",
+                          transition: "all 0.2s ease-in-out",
+                        }
+                      : {},
+                  }}
+                  // onClick={() => estaOcupada && irDetallePaciente(paciente.id)}
+                >
+                  <CardHeader
+                    avatar={
+                      <Box
+                        sx={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          bgcolor: estaDisponible
+                            ? "success.main"
+                            : "primary.main",
+                          color: "white",
+                        }}
+                      >
+                        {estaDisponible ? <CheckCircleIcon /> : <PersonIcon />}
+                      </Box>
+                    }
+                    title={
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <Typography
+                          variant={isMobile ? "body1" : "h6"}
+                          sx={{ fontWeight: "bold" }}
                         >
-                          <Typography
-                            variant={isMobile ? "body1" : "h6"}
-                            sx={{ fontWeight: "bold" }}
-                          >
-                            <BedIcon fontSize="small" sx={{ mr: 1 }} />
-                            {paciente.cama}
-                          </Typography>
-                          <Chip
-                            size="small"
-                            label="Activo"
-                            color="success"
-                            variant="filled"
-                          />
-                        </Box>
-                      }
-                      subheader={
+                          <BedIcon fontSize="small" sx={{ mr: 1 }} />
+                          Cama {cama.cama}
+                        </Typography>
+                        <Chip
+                          size="small"
+                          label={estaDisponible ? "Disponible" : "Ocupada"}
+                          color={estaDisponible ? "success" : "error"}
+                          variant="filled"
+                        />
+                      </Box>
+                    }
+                    subheader={
+                      estaOcupada ? (
                         <Box>
                           <Typography
                             variant="body1"
@@ -316,7 +249,7 @@ const ListaPacientes: React.FC = () => {
                               fontSize: { xs: "0.875rem", sm: "1rem" },
                             }}
                           >
-                            {paciente.nombre} {paciente.apellido}
+                            {/* {paciente.nombre} {paciente.apellido} */}
                           </Typography>
                           <Typography
                             variant="body2"
@@ -325,12 +258,37 @@ const ListaPacientes: React.FC = () => {
                               fontSize: { xs: "0.75rem", sm: "0.875rem" },
                             }}
                           >
-                            Ingreso: {formatFecha(paciente.fecha_ingreso)}
+                            {/* Ingreso: {formatFecha(paciente.fecha_ingreso)} */}
                           </Typography>
+                          {/* {paciente.motivo_ingreso && (
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{
+                                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                                mt: 0.5,
+                              }}
+                            >
+                              Motivo: {paciente.motivo_ingreso}
+                            </Typography>
+                          )} */}
                         </Box>
-                      }
-                      sx={{ flexGrow: 1, pb: 1 }}
-                    />
+                      ) : (
+                        <Typography
+                          variant="body2"
+                          color="success.dark"
+                          sx={{
+                            fontSize: { xs: "0.875rem", sm: "1rem" },
+                            fontWeight: "medium",
+                          }}
+                        >
+                          Cama lista para asignar
+                        </Typography>
+                      )
+                    }
+                    sx={{ flexGrow: 1, pb: 1 }}
+                  />
+                  {estaOcupada && (
                     <CardActions
                       sx={{
                         justifyContent: "space-between",
@@ -346,7 +304,7 @@ const ListaPacientes: React.FC = () => {
                         startIcon={<AssignmentIcon />}
                         onClick={event => {
                           event.stopPropagation();
-                          agregarPase(paciente.id);
+                          // agregarPase(paciente.id);
                         }}
                         sx={{
                           borderRadius: 2,
@@ -363,7 +321,7 @@ const ListaPacientes: React.FC = () => {
                         startIcon={<ScienceIcon />}
                         onClick={event => {
                           event.stopPropagation();
-                          agregarCultivos(paciente.id);
+                          // agregarCultivos(paciente.id);
                         }}
                         sx={{
                           borderRadius: 2,
@@ -374,94 +332,84 @@ const ListaPacientes: React.FC = () => {
                         Agregar Cultivo
                       </Button>
                     </CardActions>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          )}
+                  )}
+                </Card>
+              </Grid>
+            );
+          })}
+        </Grid>
+      )}
 
-          {tabValue === 1 && pacientesInactivos.length > 0 && (
-            <Grid container spacing={{ xs: 2, sm: 3 }}>
-              {pacientesInactivos.map(paciente => (
-                <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={paciente.id}>
-                  <Card
-                    elevation={1}
-                    sx={{
-                      cursor: "pointer",
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      borderRadius: 2,
-                      opacity: 0.7,
-                      border: "2px dashed #ccc",
-                      "&:hover": {
-                        opacity: 0.9,
-                        boxShadow: 2,
-                      },
-                    }}
-                    onClick={() => irDetallePaciente(paciente.id)}
-                  >
-                    <CardHeader
-                      avatar={
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <PersonIcon color="disabled" />
-                        </Box>
-                      }
-                      title={
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <Typography
-                            variant={isMobile ? "body1" : "h6"}
-                            color="text.secondary"
-                          >
-                            <BedIcon fontSize="small" sx={{ mr: 1 }} />
-                            {paciente.cama}
-                          </Typography>
-                          <Chip
-                            size="small"
-                            label="Inactivo"
-                            color="default"
-                            variant="outlined"
-                          />
-                        </Box>
-                      }
-                      subheader={
-                        <Box>
-                          <Typography
-                            variant="body1"
-                            color="text.secondary"
-                            sx={{
-                              mb: 0.5,
-                              fontSize: { xs: "0.875rem", sm: "1rem" },
-                            }}
-                          >
-                            {paciente.nombre} {paciente.apellido}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            color="text.disabled"
-                            sx={{
-                              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                            }}
-                          >
-                            Ingreso: {formatFecha(paciente.fecha_ingreso)}
-                          </Typography>
-                        </Box>
-                      }
-                      sx={{ flexGrow: 1 }}
-                    />
-                  </Card>
-                </Grid>
-              ))}
+      {/* Tab 1: Pacientes inactivos */}
+      {tabValue === 1 && pacientesInactivos.length > 0 && (
+        <Grid container spacing={{ xs: 2, sm: 3 }}>
+          {pacientesInactivos.map(paciente => (
+            <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={paciente.id}>
+              <Card
+                elevation={1}
+                sx={{
+                  cursor: "pointer",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  borderRadius: 2,
+                  opacity: 0.7,
+                  border: "2px dashed #ccc",
+                  "&:hover": {
+                    opacity: 0.9,
+                    boxShadow: 2,
+                  },
+                }}
+                onClick={() => irDetallePaciente(paciente.id)}
+              >
+                <CardHeader
+                  avatar={
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <PersonIcon color="disabled" />
+                    </Box>
+                  }
+                  title={
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <Typography
+                        variant={isMobile ? "body1" : "h6"}
+                        color="text.secondary"
+                      >
+                        {paciente.nombre} {paciente.apellido}
+                      </Typography>
+                      <Chip
+                        size="small"
+                        label="Inactivo"
+                        color="default"
+                        variant="outlined"
+                      />
+                    </Box>
+                  }
+                  subheader={
+                    <Box>
+                      <Typography
+                        variant="body2"
+                        color="text.disabled"
+                        sx={{
+                          fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        }}
+                      >
+                        Ingreso: {formatFecha(paciente.fecha_ingreso)}
+                      </Typography>
+                    </Box>
+                  }
+                  sx={{ flexGrow: 1 }}
+                />
+              </Card>
             </Grid>
-          )}
-        </>
+          ))}
+        </Grid>
       )}
 
       {/* Botón flotante para agregar paciente - Responsive */}
