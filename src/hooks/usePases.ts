@@ -58,12 +58,38 @@ export const usePases = (fechaFiltro: Date) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("pases")
-        .select(`*,pacientes!inner ( id, nombre, apellido, cama )`)
+        .select(
+          `
+          *,
+          pacientes!inner (
+            id,
+            nombre,
+            apellido,
+            cama_id,
+            cama:camas!pacientes_cama_id_fkey (
+              id,
+              cama
+            )
+          )
+        `
+        )
         .eq("fecha_creacion", formatDateTimeLocal(fechaFiltro.toString()))
-        .order("pacientes(cama)", { ascending: true });
+        .order("pacientes(cama_id)", { ascending: true });
 
       if (error) throw error;
-      return data as PasePaciente[];
+
+      // Transformar los datos para aplanar la estructura de cama
+      const transformedData = data.map((pase: any) => ({
+        ...pase,
+        pacientes: {
+          id: pase.pacientes.id,
+          nombre: pase.pacientes.nombre,
+          apellido: pase.pacientes.apellido,
+          cama: pase.pacientes.cama?.cama || null, // Número de cama o null
+        },
+      }));
+
+      return transformedData as PasePaciente[];
     },
   });
 };

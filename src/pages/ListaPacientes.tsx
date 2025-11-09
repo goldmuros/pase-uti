@@ -49,8 +49,6 @@ const ListaPacientes: React.FC = () => {
     error: errorCamas,
   } = useCamasConPaciente();
 
-  console.log("hola camas", camas);
-
   const [tabValue, setTabValue] = useState(0);
 
   const isLoading = loadingPacientes || loadingCamas;

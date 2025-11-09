@@ -8,6 +8,7 @@ import {
 } from "@mui/icons-material";
 import {
   Box,
+  Button,
   Container,
   Fab,
   Grid,
@@ -183,9 +184,7 @@ const ListaPases: React.FC = () => {
         </Box>
 
         {pases?.length === 0 ? (
-          <Paper
-            sx={{ p: { xs: 3, sm: 4 }, textAlign: "center", borderRadius: 2 }}
-          >
+          <Paper sx={{ p: { xs: 3, sm: 4 }, textAlign: "center" }}>
             <AssignmentIcon
               sx={{
                 fontSize: { xs: 48, sm: 64 },
@@ -193,9 +192,25 @@ const ListaPases: React.FC = () => {
                 mb: 2,
               }}
             />
-            <Typography variant="body2" color="text.secondary">
-              No se encontraron pases médicos en el sistema.
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              {fechaFiltro
+                ? "No hay pases registrados para esta fecha"
+                : "No hay pases registrados"}
             </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              {fechaFiltro
+                ? "Intente con otra fecha o limpie el filtro."
+                : "Comience agregando un nuevo pase al sistema."}
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => navigate("/pases/nuevo")}
+              sx={{ borderRadius: 2 }}
+              size={isMobile ? "medium" : "large"}
+            >
+              Agregar Pase
+            </Button>
           </Paper>
         ) : (
           <Grid container spacing={{ xs: 2, sm: 3 }}>

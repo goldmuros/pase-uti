@@ -1,3 +1,5 @@
+import type { Paciente } from "./Paciente";
+
 export interface Cultivos {
   id: string;
   fecha_solicitud: string;
@@ -8,4 +10,17 @@ export interface Cultivos {
   paciente_id: string;
   estado: string;
   activo: boolean;
+}
+
+export interface CultivosPaciente {
+  id: string;
+  fecha_solicitud: string;
+  fecha_recibido: string | null;
+  nombre: string;
+  resultado: string;
+  created_at: string;
+  paciente_id: string;
+  estado: string;
+  activo: boolean;
+  pacientes: Paciente;
 }

@@ -1,7 +1,7 @@
 import { formatDateTimeLocal } from "@/utils/fechas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../config/supabase";
-import type { Cultivos } from "../types/Cultivos";
+import type { Cultivos, CultivosPaciente } from "../types/Cultivos";
 
 // Query keys
 export const cultivosKeys = {
@@ -23,8 +23,12 @@ const getCultivosQuery = (pacienteId?: string | null) => {
         id,
         nombre,
         apellido,
-        cama,
-        activo
+        activo,
+        cama_id,
+        cama:camas!pacientes_cama_id_fkey (
+          id,
+          cama
+        )
       )
     `
     )
@@ -34,7 +38,7 @@ const getCultivosQuery = (pacienteId?: string | null) => {
     query = query.eq("paciente_id", pacienteId);
   }
 
-  return query.order("pacientes(cama)", { ascending: true });
+  return query.order("created_at", { ascending: false });
 };
 
 export const useGetCultivosPorPaciente = (pacienteId?: string) => {
@@ -69,13 +73,23 @@ export const useCultivos = (
 
       if (error) throw error;
 
-      // Filtrar por fecha en el cliente
-      let filteredData = data as any[];
+      // Transformar los datos para aplanar la estructura de cama
+      let transformedData = data.map((cultivo: any) => ({
+        ...cultivo,
+        pacientes: {
+          id: cultivo.pacientes.id,
+          nombre: cultivo.pacientes.nombre,
+          apellido: cultivo.pacientes.apellido,
+          activo: cultivo.pacientes.activo,
+          cama: cultivo.pacientes.cama?.cama || null, // Número de cama o null
+        },
+      }));
 
+      // Filtrar por fecha en el cliente
       if (fechaFiltro) {
         const fechaStr = formatDateTimeLocal(fechaFiltro.toISOString());
 
-        filteredData = filteredData.filter(cultivo => {
+        transformedData = transformedData.filter(cultivo => {
           // Incluir si fecha_recibido coincide O si es null
           return (
             !cultivo.fecha_recibido ||
@@ -84,9 +98,10 @@ export const useCultivos = (
         });
       }
 
-      const sortedData = filteredData.sort((a, b) => {
-        const camaA = parseInt(a.pacientes?.cama || "0", 10);
-        const camaB = parseInt(b.pacientes?.cama || "0", 10);
+      // Ordenar por número de cama
+      const sortedData = transformedData.sort((a, b) => {
+        const camaA = a.pacientes?.cama || 0;
+        const camaB = b.pacientes?.cama || 0;
 
         if (camaA !== camaB) {
           return camaA - camaB;
@@ -99,7 +114,7 @@ export const useCultivos = (
         );
       });
 
-      return sortedData as Cultivos[];
+      return sortedData as CultivosPaciente[];
     },
   });
 };

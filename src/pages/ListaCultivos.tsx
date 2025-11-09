@@ -3,8 +3,6 @@ import { usePacientes } from "@/hooks/usePacientes";
 import {
   Add as AddIcon,
   Bed as BedIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon,
   Science as ScienceIcon,
   Warning as WarningIcon,
 } from "@mui/icons-material";
@@ -13,8 +11,6 @@ import {
   Box,
   Button,
   Card,
-  CardActions,
-  CardContent,
   CardHeader,
   Chip,
   Container,
@@ -102,8 +98,15 @@ const ListaCultivos: React.FC = () => {
     });
   };
 
-  const buscarPaciente = (pacienteId: string) => {
-    return pacientes.find(paciente => paciente.id === pacienteId);
+  // const buscarPaciente = (pacienteId: string) => {
+  //   return pacientes.find(paciente => paciente.id === pacienteId);
+  // };
+  const buscarDatosPaciente = (cultivoPacientes: any) => {
+    return {
+      cama: cultivoPacientes?.cama,
+      nombre: cultivoPacientes?.nombre,
+      apellido: cultivoPacientes?.apellido,
+    };
   };
 
   const eliminarCultivo = async (id: string) => {
@@ -252,6 +255,8 @@ const ListaCultivos: React.FC = () => {
         ) : (
           <Grid container spacing={{ xs: 1, sm: 2, md: 3 }}>
             {cultivos.map(cultivo => {
+              const datosPaciente = buscarDatosPaciente(cultivo.pacientes);
+
               return (
                 <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={cultivo.id}>
                   <Card
@@ -292,14 +297,13 @@ const ListaCultivos: React.FC = () => {
                               sx={{ fontWeight: "bold" }}
                             >
                               <BedIcon fontSize="small" sx={{ mr: 1 }} />
-                              {buscarPaciente(cultivo.paciente_id)?.cama}
+                              {datosPaciente.cama || "Sin cama"}
                             </Typography>
                             <Typography
                               variant={isMobile ? "body1" : "h6"}
                               sx={{ fontWeight: "bold" }}
                             >
-                              {`${buscarPaciente(cultivo.paciente_id)?.nombre}
-                                ${buscarPaciente(cultivo.paciente_id)?.apellido}`}
+                              {`${datosPaciente.nombre} ${datosPaciente.apellido}`}
                             </Typography>
                           </Box>
                           <Chip
@@ -309,84 +313,9 @@ const ListaCultivos: React.FC = () => {
                           />
                         </Box>
                       }
-                      subheader={
-                        <Box>
-                          <Box>
-                            <Typography
-                              variant={isMobile ? "body1" : "h6"}
-                              sx={{ fontWeight: "bold" }}
-                            >
-                              {cultivo.nombre}
-                            </Typography>
-                          </Box>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                              mb: 0.5,
-                              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                            }}
-                          >
-                            Solicitado: {formatFecha(cultivo.fecha_solicitud)}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                            }}
-                          >
-                            Recibido:{" "}
-                            {cultivo.fecha_recibido
-                              ? formatFecha(cultivo.fecha_recibido)
-                              : "Pendiente"}
-                          </Typography>
-                        </Box>
-                      }
-                      sx={{ flexGrow: 1, pb: 1 }}
+                      // ... resto del código
                     />
-                    <CardContent sx={{ flexGrow: 1, pt: 0 }}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontSize: { xs: "0.875rem", sm: "1rem" },
-                          color: "text.primary",
-                        }}
-                      >
-                        <strong>Resultado:</strong> {cultivo.resultado}
-                      </Typography>
-                    </CardContent>
-                    <CardActions
-                      sx={{ px: 2, pb: 2, justifyContent: "flex-end", gap: 1 }}
-                    >
-                      <Button
-                        size="small"
-                        color="error"
-                        variant="outlined"
-                        startIcon={<DeleteIcon />}
-                        onClick={() => setAbrirDialogBorrar(cultivo.id)}
-                        disabled={deleteCultivo.isPending}
-                        sx={{
-                          borderRadius: 2,
-                          fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                        }}
-                      >
-                        Eliminar
-                      </Button>
-                      <Button
-                        size="small"
-                        color="primary"
-                        variant="contained"
-                        startIcon={<EditIcon />}
-                        onClick={() => editarCultivo(cultivo.id)}
-                        sx={{
-                          borderRadius: 2,
-                          fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                        }}
-                      >
-                        Editar
-                      </Button>
-                    </CardActions>
+                    {/* ... resto del Card */}
                   </Card>
                 </Grid>
               );
