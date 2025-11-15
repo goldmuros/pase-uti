@@ -28,10 +28,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { es } from "date-fns/locale";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -98,9 +95,6 @@ const ListaCultivos: React.FC = () => {
     });
   };
 
-  // const buscarPaciente = (pacienteId: string) => {
-  //   return pacientes.find(paciente => paciente.id === pacienteId);
-  // };
   const buscarDatosPaciente = (cultivoPacientes: any) => {
     return {
       cama: cultivoPacientes?.cama,
@@ -160,7 +154,7 @@ const ListaCultivos: React.FC = () => {
   }
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+    <>
       <Container
         maxWidth="xl"
         sx={{
@@ -375,7 +369,7 @@ const ListaCultivos: React.FC = () => {
           </DialogActions>
         </Dialog>
       )}
-    </LocalizationProvider>
+    </>
   );
 };
 

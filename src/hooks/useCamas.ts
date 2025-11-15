@@ -1,3 +1,5 @@
+import type { Paciente } from "@/types/Paciente";
+import { formatDateTimeLocal } from "@/utils/fechas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../config/supabase";
 
@@ -13,13 +15,7 @@ export interface Cama {
 }
 
 export interface CamaConPaciente extends Cama {
-  pacientes?: Array<{
-    id: string;
-    nombre: string;
-    apellido: string;
-    motivo_ingreso: string;
-    fecha_ingreso: string;
-  }> | null;
+  pacientes: Paciente;
 }
 
 // Query keys
@@ -67,9 +63,12 @@ export const useCamasDisponibles = () => {
 };
 
 // Get camas con información del paciente
-export const useCamasConPaciente = () => {
+export const useCamasConPaciente = (fechaFiltro: Date | null) => {
   return useQuery({
-    queryKey: camasKeys.list({ withPaciente: true }),
+    queryKey: camasKeys.list({
+      withPaciente: true,
+      fecha: fechaFiltro?.toISOString(),
+    }),
     queryFn: async () => {
       const { data, error } = await tabla
         .select(
@@ -89,12 +88,31 @@ export const useCamasConPaciente = () => {
       if (error) throw error;
 
       // Transformar el array de pacientes a un solo objeto
-      const transformedData = data.map((cama: any) => ({
+      let transformedData: CamaConPaciente[] = data.map((cama: any) => ({
         ...cama,
-        paciente: cama.pacientes?.[0] || null,
+        pacientes: cama.pacientes?.[0] || null,
       }));
 
-      return transformedData as CamaConPaciente[];
+      // Filtrar por fecha en el cliente
+      if (fechaFiltro) {
+        const fechaStr = formatDateTimeLocal(fechaFiltro.toISOString());
+
+        transformedData = transformedData.filter(cama => {
+          // ✅ Si no hay paciente asignado, incluir la cama (está disponible)
+          if (!cama.pacientes) {
+            return true;
+          }
+
+          // ✅ Si hay paciente, verificar que tenga fecha_ingreso y que coincida
+          if (!cama.pacientes.fecha_ingreso) {
+            return false;
+          }
+
+          return formatDateTimeLocal(cama.pacientes.fecha_ingreso) === fechaStr;
+        });
+      }
+
+      return transformedData;
     },
   });
 };
