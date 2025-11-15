@@ -28,7 +28,6 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -37,8 +36,6 @@ const ListaPacientes: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  const [fechaFiltro, setFechaFiltro] = useState<Date | null>(new Date());
 
   const {
     data: pacientes,
@@ -50,7 +47,7 @@ const ListaPacientes: React.FC = () => {
     data: camas,
     isLoading: loadingCamas,
     error: errorCamas,
-  } = useCamasConPaciente(fechaFiltro);
+  } = useCamasConPaciente();
 
   const [tabValue, setTabValue] = useState(0);
 
@@ -165,213 +162,178 @@ const ListaPacientes: React.FC = () => {
 
       {/* Tab 0: Vista de todas las camas */}
       {tabValue === 0 && camas && (
-        <>
-          {/* Filtro de fecha */}
-          <Box
-            sx={{
-              mb: 3,
-              display: "flex",
-              gap: 2,
-              alignItems: "center",
-              flexDirection: { xs: "column", sm: "row" },
-            }}
-          >
-            <DatePicker
-              label="Filtrar por fecha de solicitud"
-              value={fechaFiltro}
-              onChange={newValue => setFechaFiltro(newValue)}
-              slotProps={{
-                textField: {
-                  size: isMobile ? "small" : "medium",
-                  fullWidth: isMobile,
-                  sx: { minWidth: { sm: 250 } },
-                },
-              }}
-            />
-          </Box>
-          <Grid container spacing={{ xs: 2, sm: 3 }}>
-            {camas.map(cama => {
-              const estaOcupada = !cama.disponible;
-              const estaDisponible = cama.disponible;
+        <Grid container spacing={{ xs: 2, sm: 3 }}>
+          {camas.map(cama => {
+            const estaOcupada = !cama.disponible;
 
-              return (
-                <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={cama.id}>
-                  <Card
-                    elevation={2}
-                    sx={{
-                      cursor: estaOcupada ? "pointer" : "default",
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      borderRadius: 2,
-                      bgcolor: estaDisponible
-                        ? "success.50"
-                        : "background.paper",
-                      border: estaDisponible ? "2px solid" : "none",
-                      borderColor: estaDisponible
-                        ? "success.main"
-                        : "transparent",
-                      "&:hover": estaOcupada
-                        ? {
-                            boxShadow: 4,
-                            transform: "translateY(-2px)",
-                            transition: "all 0.2s ease-in-out",
-                          }
-                        : {},
-                    }}
-                    onClick={() =>
-                      estaOcupada && irDetallePaciente(cama.pacientes.id)
+            return (
+              <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={cama.id}>
+                <Card
+                  elevation={2}
+                  sx={{
+                    cursor: estaOcupada ? "pointer" : "default",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    borderRadius: 2,
+                    bgcolor: estaOcupada ? "background.paper" : "success.50",
+                    border: estaOcupada ? "none" : "2px solid",
+                    borderColor: estaOcupada ? "transparent" : "success.main",
+                    "&:hover": estaOcupada
+                      ? {
+                          boxShadow: 4,
+                          transform: "translateY(-2px)",
+                          transition: "all 0.2s ease-in-out",
+                        }
+                      : {},
+                  }}
+                  onClick={() =>
+                    estaOcupada && irDetallePaciente(cama.pacientes.id)
+                  }
+                >
+                  <CardHeader
+                    avatar={
+                      <Box
+                        sx={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          bgcolor: estaOcupada
+                            ? "primary.main"
+                            : "success.main",
+                          color: "white",
+                        }}
+                      >
+                        {estaOcupada ? <PersonIcon /> : <CheckCircleIcon />}
+                      </Box>
                     }
-                  >
-                    <CardHeader
-                      avatar={
-                        <Box
-                          sx={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            bgcolor: estaDisponible
-                              ? "success.main"
-                              : "primary.main",
-                            color: "white",
-                          }}
+                    title={
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <Typography
+                          variant={isMobile ? "body1" : "h6"}
+                          sx={{ fontWeight: "bold" }}
                         >
-                          {estaDisponible ? (
-                            <CheckCircleIcon />
-                          ) : (
-                            <PersonIcon />
-                          )}
-                        </Box>
-                      }
-                      title={
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            flexWrap: "wrap",
-                          }}
-                        >
+                          <BedIcon fontSize="small" sx={{ mr: 1 }} />
+                          Cama {cama.cama}
+                        </Typography>
+                        <Chip
+                          size="small"
+                          label={estaOcupada ? "Ocupada" : "Disponible"}
+                          color={estaOcupada ? "error" : "success"}
+                          variant="filled"
+                        />
+                      </Box>
+                    }
+                    subheader={
+                      estaOcupada ? (
+                        <Box>
                           <Typography
-                            variant={isMobile ? "body1" : "h6"}
-                            sx={{ fontWeight: "bold" }}
+                            variant="body1"
+                            sx={{
+                              fontWeight: "medium",
+                              mb: 0.5,
+                              fontSize: { xs: "0.875rem", sm: "1rem" },
+                            }}
                           >
-                            <BedIcon fontSize="small" sx={{ mr: 1 }} />
-                            Cama {cama.cama}
+                            {cama.pacientes.nombre} {cama.pacientes.apellido}
                           </Typography>
-                          <Chip
-                            size="small"
-                            label={estaDisponible ? "Disponible" : "Ocupada"}
-                            color={estaDisponible ? "success" : "error"}
-                            variant="filled"
-                          />
-                        </Box>
-                      }
-                      subheader={
-                        estaOcupada ? (
-                          <Box>
-                            <Typography
-                              variant="body1"
-                              sx={{
-                                fontWeight: "medium",
-                                mb: 0.5,
-                                fontSize: { xs: "0.875rem", sm: "1rem" },
-                              }}
-                            >
-                              {cama.pacientes.nombre} {cama.pacientes.apellido}
-                            </Typography>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                            }}
+                          >
+                            Ingreso: {formatFecha(cama.pacientes.fecha_ingreso)}
+                          </Typography>
+                          {cama.pacientes.motivo_ingreso && (
                             <Typography
                               variant="body2"
                               color="text.secondary"
                               sx={{
                                 fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                                mt: 0.5,
                               }}
                             >
-                              Ingreso:{" "}
-                              {formatFecha(cama.pacientes.fecha_ingreso)}
+                              Motivo: {cama.pacientes.motivo_ingreso}
                             </Typography>
-                            {cama.pacientes.motivo_ingreso && (
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{
-                                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                                  mt: 0.5,
-                                }}
-                              >
-                                Motivo: {cama.pacientes.motivo_ingreso}
-                              </Typography>
-                            )}
-                          </Box>
-                        ) : (
-                          <Typography
-                            variant="body2"
-                            color="success.dark"
-                            sx={{
-                              fontSize: { xs: "0.875rem", sm: "1rem" },
-                              fontWeight: "medium",
-                            }}
-                          >
-                            Cama lista para asignar
-                          </Typography>
-                        )
-                      }
-                      sx={{ flexGrow: 1, pb: 1 }}
-                    />
-                    {estaOcupada && (
-                      <CardActions
+                          )}
+                        </Box>
+                      ) : (
+                        <Typography
+                          variant="body2"
+                          color="success.dark"
+                          sx={{
+                            fontSize: { xs: "0.875rem", sm: "1rem" },
+                            fontWeight: "medium",
+                          }}
+                        >
+                          Cama lista para asignar
+                        </Typography>
+                      )
+                    }
+                    sx={{ flexGrow: 1, pb: 1 }}
+                  />
+                  {estaOcupada && (
+                    <CardActions
+                      sx={{
+                        justifyContent: "space-between",
+                        px: 2,
+                        pb: 2,
+                        flexDirection: { xs: "column", sm: "row" },
+                        gap: { xs: 1, sm: 0 },
+                      }}
+                    >
+                      <Button
+                        size="small"
+                        color="primary"
+                        startIcon={<AssignmentIcon />}
+                        onClick={event => {
+                          event.stopPropagation();
+                          agregarPase(cama.pacientes.id);
+                        }}
                         sx={{
-                          justifyContent: "space-between",
-                          px: 2,
-                          pb: 2,
-                          flexDirection: { xs: "column", sm: "row" },
-                          gap: { xs: 1, sm: 0 },
+                          borderRadius: 2,
+                          width: { xs: "100%", sm: "auto" },
+                          fontSize: { xs: "0.75rem", sm: "0.875rem" },
                         }}
                       >
-                        <Button
-                          size="small"
-                          color="primary"
-                          startIcon={<AssignmentIcon />}
-                          onClick={event => {
-                            event.stopPropagation();
-                            agregarPase(cama.pacientes.id);
-                          }}
-                          sx={{
-                            borderRadius: 2,
-                            width: { xs: "100%", sm: "auto" },
-                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                          }}
-                        >
-                          Agregar Pase
-                        </Button>
-                        <Button
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                          startIcon={<ScienceIcon />}
-                          onClick={event => {
-                            event.stopPropagation();
-                            agregarCultivos(cama.pacientes.id);
-                          }}
-                          sx={{
-                            borderRadius: 2,
-                            width: { xs: "100%", sm: "auto" },
-                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                          }}
-                        >
-                          Agregar Cultivo
-                        </Button>
-                      </CardActions>
-                    )}
-                  </Card>
-                </Grid>
-              );
-            })}
-          </Grid>
-        </>
+                        Agregar Pase
+                      </Button>
+                      <Button
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                        startIcon={<ScienceIcon />}
+                        onClick={event => {
+                          event.stopPropagation();
+                          agregarCultivos(cama.pacientes.id);
+                        }}
+                        sx={{
+                          borderRadius: 2,
+                          width: { xs: "100%", sm: "auto" },
+                          fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        }}
+                      >
+                        Agregar Cultivo
+                      </Button>
+                    </CardActions>
+                  )}
+                </Card>
+              </Grid>
+            );
+          })}
+        </Grid>
       )}
 
       {/* Tab 1: Pacientes inactivos */}

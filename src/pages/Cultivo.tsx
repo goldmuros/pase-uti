@@ -22,7 +22,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState, type ReactNode } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 
 export const CULTIVOS = [
   { id: "hemocultivo", nombre: "Hemocultivo" },
@@ -45,6 +45,7 @@ const DEFAULT_CULTIVO = {
 const Cultivo = (): ReactNode => {
   const { id: cultivoId = "" } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const updateCultivo = useUpdateCultivo();
   const createCultivo = useCreateCultivo();
   const { data: cultivo } = useCultivo(cultivoId);
@@ -61,6 +62,14 @@ const Cultivo = (): ReactNode => {
   useEffect(() => {
     if (cultivo) {
       setFormCultivo(cultivo);
+    }
+
+    const pacienteIdFromUrl = searchParams.get("pacienteId");
+    if (pacienteIdFromUrl && !cultivoId) {
+      setFormCultivo(prev => ({
+        ...prev,
+        paciente_id: pacienteIdFromUrl,
+      }));
     }
   }, [cultivo]);
 
@@ -130,7 +139,7 @@ const Cultivo = (): ReactNode => {
             >
               {pacientes?.map(paciente => (
                 <MenuItem key={paciente.id} value={paciente.id}>
-                  {paciente.nombre} {paciente.apellido} - Cama {paciente.cama}
+                  {paciente.nombre} {paciente.apellido}
                 </MenuItem>
               ))}
             </Select>
@@ -167,9 +176,6 @@ const Cultivo = (): ReactNode => {
               value={formCultivo.fecha_solicitud}
               onChange={handleChange("fecha_solicitud")}
               required
-              InputLabelProps={{
-                shrink: true,
-              }}
             />
           </Box>
 
@@ -180,9 +186,6 @@ const Cultivo = (): ReactNode => {
               type="date"
               value={formCultivo.fecha_recibido}
               onChange={handleChange("fecha_recibido")}
-              InputLabelProps={{
-                shrink: true,
-              }}
               helperText="Opcional - dejar vacío si aún no se ha recibido"
             />
           </Box>

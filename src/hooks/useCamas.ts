@@ -1,5 +1,4 @@
 import type { Paciente } from "@/types/Paciente";
-import { formatDateTimeLocal } from "@/utils/fechas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../config/supabase";
 
@@ -63,11 +62,10 @@ export const useCamasDisponibles = () => {
 };
 
 // Get camas con información del paciente
-export const useCamasConPaciente = (fechaFiltro: Date | null) => {
+export const useCamasConPaciente = () => {
   return useQuery({
     queryKey: camasKeys.list({
       withPaciente: true,
-      fecha: fechaFiltro?.toISOString(),
     }),
     queryFn: async () => {
       const { data, error } = await tabla
@@ -79,7 +77,9 @@ export const useCamasConPaciente = (fechaFiltro: Date | null) => {
             nombre,
             apellido,
             motivo_ingreso,
-            fecha_ingreso
+            fecha_ingreso,
+            fecha_alta,
+            motivo_alta
           )
         `
         )
@@ -88,31 +88,10 @@ export const useCamasConPaciente = (fechaFiltro: Date | null) => {
       if (error) throw error;
 
       // Transformar el array de pacientes a un solo objeto
-      let transformedData: CamaConPaciente[] = data.map((cama: any) => ({
+      return data.map((cama: any) => ({
         ...cama,
         pacientes: cama.pacientes?.[0] || null,
-      }));
-
-      // Filtrar por fecha en el cliente
-      if (fechaFiltro) {
-        const fechaStr = formatDateTimeLocal(fechaFiltro.toISOString());
-
-        transformedData = transformedData.filter(cama => {
-          // ✅ Si no hay paciente asignado, incluir la cama (está disponible)
-          if (!cama.pacientes) {
-            return true;
-          }
-
-          // ✅ Si hay paciente, verificar que tenga fecha_ingreso y que coincida
-          if (!cama.pacientes.fecha_ingreso) {
-            return false;
-          }
-
-          return formatDateTimeLocal(cama.pacientes.fecha_ingreso) === fechaStr;
-        });
-      }
-
-      return transformedData;
+      })) as CamaConPaciente[];
     },
   });
 };
