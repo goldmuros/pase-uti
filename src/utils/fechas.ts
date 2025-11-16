@@ -7,3 +7,11 @@ export const formatDateTimeLocal = (dateString: string | null) => {
 
   return `${year}-${month}-${day}`;
 };
+
+export const formatFecha = (fecha: string) => {
+  return new Date(fecha).toLocaleDateString("es-ES", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};

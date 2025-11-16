@@ -123,3 +123,40 @@ export const useDarDeAltaPaciente = () => {
     },
   });
 };
+
+// Create paciente
+export const useCreatePaciente = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      newPaciente: Omit<Paciente, "id" | "created_at" | "updated_at">
+    ) => {
+      // Insertar el nuevo paciente
+      const { data, error } = await tabla.insert(newPaciente).select().single();
+
+      if (error) throw error;
+
+      // Si se asignó una cama, marcarla como ocupada
+      if (newPaciente.cama_id) {
+        const { error: camaError } = await supabase
+          .from("camas")
+          .update({
+            disponible: false,
+            fecha_asignacion: new Date().toISOString(),
+          })
+          .eq("id", newPaciente.cama_id);
+
+        if (camaError) throw camaError;
+      }
+
+      return data as Paciente;
+    },
+    onSuccess: () => {
+      // Invalidar queries de pacientes
+      queryClient.invalidateQueries({ queryKey: pacientesKeys.lists() });
+      // Invalidar queries de camas porque la relación cambió
+      queryClient.invalidateQueries({ queryKey: ["camas"] });
+    },
+  });
+};

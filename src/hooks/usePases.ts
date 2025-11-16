@@ -48,7 +48,10 @@ const cleanPaseData = (data: any) => {
   // Remove cultivos if it exists (it's computed data, not a DB field)
   delete cleaned.cultivos;
 
-  return cleaned;
+  return {
+    ...cleaned,
+    fecha_creacion: formatDateTimeLocal(new Date().toISOString()),
+  };
 };
 
 // Get all pases

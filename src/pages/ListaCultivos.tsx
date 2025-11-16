@@ -87,14 +87,6 @@ const ListaCultivos: React.FC = () => {
     navigate(`/cultivos/${id}/editar`);
   };
 
-  const formatFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   const buscarDatosPaciente = (cultivoPacientes: any) => {
     return {
       cama: cultivoPacientes?.cama,

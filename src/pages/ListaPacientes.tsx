@@ -1,5 +1,6 @@
 import { useCamasConPaciente } from "@/hooks/useCamas";
 import { usePacientes } from "@/hooks/usePacientes";
+import { formatFecha } from "@/utils/fechas";
 import {
   Add as AddIcon,
   Assignment as AssignmentIcon,
@@ -68,14 +69,6 @@ const ListaPacientes: React.FC = () => {
 
   const agregarNuevoPaciente = () => {
     navigate("/pacientes/nuevo");
-  };
-
-  const formatFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
   };
 
   // Estados de carga

@@ -1,3 +1,4 @@
+import { formatFecha } from "@/utils/fechas";
 import {
   Add as AddIcon,
   LocalHospital as HospitalIcon,
@@ -42,14 +43,6 @@ const ListaMedicos: React.FC = () => {
 
   const agregarNuevoMedico = () => {
     navigate("/medicos/nuevo");
-  };
-
-  const formatFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
   };
 
   // Estados de carga

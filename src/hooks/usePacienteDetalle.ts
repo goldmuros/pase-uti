@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { supabase } from "../config/supabase";
 import type { Cultivos } from "../types/Cultivos";
 import type { Paciente } from "../types/Paciente";
-import type { Pase } from "../types/Pase";
+import type { PaseType } from "../types/Pase";
+import type { Cama } from "./useCamas";
 
 // Tipos para el estado del componente de detalle de paciente
 export interface DetallePacienteState {
+  cama: Cama | null;
   paciente: Paciente | null;
-  pases: Pase[];
-  cultivos: Cultivos[];
+  pases: PaseType | null;
+  cultivos: Cultivos | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -23,9 +25,10 @@ export interface ListaPacientesState {
 // Hook personalizado para obtener datos del paciente
 export const usePacienteDetalle = (id: string) => {
   const [state, setState] = useState<DetallePacienteState>({
+    cama: null,
     paciente: null,
-    pases: [],
-    cultivos: [],
+    pases: null,
+    cultivos: null,
     isLoading: true,
     error: null,
   });
@@ -51,7 +54,22 @@ export const usePacienteDetalle = (id: string) => {
           return;
         }
 
-        // Get pases for this paciente
+        // Get paciente
+        const { data: cama, error: camaError } = await supabase
+          .from("camas")
+          .select("*")
+          .eq("id", paciente.cama_id)
+          .single();
+
+        if (camaError || !cama) {
+          setState(prev => ({
+            ...prev,
+            isLoading: false,
+            error: "Cama no encontrado",
+          }));
+          return;
+        }
+
         const { data: pasesPaciente, error: pasesError } = await supabase
           .from("pases")
           .select("*")
@@ -60,26 +78,20 @@ export const usePacienteDetalle = (id: string) => {
 
         if (pasesError) throw pasesError;
 
-        // Get cultivos for these pases
-        const paseIds = pasesPaciente?.map(p => p.id) || [];
-        let cultivosPaciente: Cultivos[] = [];
+        const { data: cultivos, error: cultivosError } = await supabase
+          .from("cultivos")
+          .select("*")
+          .eq("paciente_id", paciente.id)
+          .eq("activo", true)
+          .order("fecha_recibido", { ascending: false, nullsFirst: false });
 
-        if (paseIds.length > 0) {
-          const { data: cultivos, error: cultivosError } = await supabase
-            .from("cultivos")
-            .select("*")
-            .eq("paciente_id", paciente.id)
-            .eq("activo", true)
-            .order("fecha_recibido", { ascending: false, nullsFirst: false });
-
-          if (cultivosError) throw cultivosError;
-          cultivosPaciente = cultivos || [];
-        }
+        if (cultivosError) throw cultivosError;
 
         setState({
+          cama,
           paciente,
-          pases: pasesPaciente || [],
-          cultivos: cultivosPaciente,
+          pases: pasesPaciente.length > 0 ? pasesPaciente[0] : null,
+          cultivos: cultivos.length > 0 ? cultivos[0] : null,
           isLoading: false,
           error: null,
         });
@@ -96,47 +108,6 @@ export const usePacienteDetalle = (id: string) => {
       fetchData();
     }
   }, [id]);
-
-  return state;
-};
-
-// Hook personalizado para obtener datos de todos los pacientes
-export const usePacientesData = () => {
-  const [state, setState] = useState<ListaPacientesState>({
-    pacientes: [],
-    isLoading: true,
-    error: null,
-  });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-      try {
-        // Get all pacientes ordered by fecha_ingreso desc
-        const { data: pacientes, error } = await supabase
-          .from("pacientes")
-          .select("*")
-          .order("fecha_ingreso", { ascending: false });
-
-        if (error) throw error;
-
-        setState({
-          pacientes: pacientes || [],
-          isLoading: false,
-          error: null,
-        });
-      } catch (error) {
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: `Error al cargar los pacientes: ${error instanceof Error ? error.message : String(error)}`,
-        }));
-      }
-    };
-
-    fetchData();
-  }, []);
 
   return state;
 };

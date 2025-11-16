@@ -75,7 +75,7 @@ const CardPase = ({ pase }: { pase: PasePaciente }): ReactNode => {
                 color="text.secondary"
                 sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
               >
-                Cama: {pase.pacientes.cama || "No asignada"}
+                Cama: {pase.pacientes.cama_id || "No asignada"}
               </Typography>
             </Box>
           </Box>

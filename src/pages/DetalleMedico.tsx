@@ -1,4 +1,5 @@
 import { useDeleteMedico, useUpdateMedico } from "@/hooks/useMedicos";
+import { formatFecha } from "@/utils/fechas";
 import {
   ArrowBack as ArrowBackIcon,
   Delete as DeleteIcon,
@@ -111,14 +112,6 @@ const DetalleMedico: React.FC = () => {
         setEditData(prev => (prev ? { ...prev, [field]: value } : null));
       }
     };
-
-  const formatFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
 
   // Estados de carga y error
   if (isLoading) {
