@@ -59,6 +59,13 @@ export const useGetCultivosPorPaciente = (pacienteId?: string) => {
   });
 };
 
+// Función auxiliar para obtener solo la parte de fecha (YYYY-MM-DD) de un timestamp
+const getDateOnly = (dateString: string | null): string | null => {
+  if (!dateString) return null;
+  // Extraer solo YYYY-MM-DD
+  return dateString.split("T")[0];
+};
+
 // Get all cultivos
 export const useCultivos = (
   fechaFiltro: Date | null,
@@ -66,6 +73,7 @@ export const useCultivos = (
 ) => {
   return useQuery({
     queryKey: cultivosKeys.list({
+      fechaFiltro: fechaFiltro?.toISOString(),
       pacienteId,
     }),
     queryFn: async () => {
@@ -87,13 +95,19 @@ export const useCultivos = (
 
       // Filtrar por fecha en el cliente
       if (fechaFiltro) {
-        const fechaStr = formatDateTimeLocal(fechaFiltro.toISOString());
+        // Obtener solo la parte de fecha (YYYY-MM-DD) del filtro
+        const fechaFiltroStr = getDateOnly(fechaFiltro.toISOString());
 
         transformedData = transformedData.filter(cultivo => {
-          // Incluir si fecha_recibido coincide O si es null
+          // Obtener las fechas en formato YYYY-MM-DD
+          const fechaSolicitud = getDateOnly(cultivo.fecha_solicitud);
+          const fechaRecibido = getDateOnly(cultivo.fecha_recibido);
+
+          // Incluir el cultivo si cualquiera de las dos fechas coincide con el filtro
+          // O si fecha_recibido es null (pendientes)
           return (
-            !cultivo.fecha_recibido ||
-            formatDateTimeLocal(cultivo.fecha_recibido) === fechaStr
+            fechaSolicitud === fechaFiltroStr ||
+            fechaRecibido === fechaFiltroStr
           );
         });
       }

@@ -56,7 +56,7 @@ const Cultivo = (): ReactNode => {
     useState<Omit<Cultivos, "id" | "created_at" | "activo">>(DEFAULT_CULTIVO);
 
   const handleCancel = () => {
-    navigate("/cultivos");
+    navigate(-1);
   };
 
   useEffect(() => {
@@ -176,6 +176,7 @@ const Cultivo = (): ReactNode => {
               value={formCultivo.fecha_solicitud}
               onChange={handleChange("fecha_solicitud")}
               required
+              InputLabelProps={{ shrink: true }}
             />
           </Box>
 
@@ -187,6 +188,7 @@ const Cultivo = (): ReactNode => {
               value={formCultivo.fecha_recibido}
               onChange={handleChange("fecha_recibido")}
               helperText="Opcional - dejar vacío si aún no se ha recibido"
+              InputLabelProps={{ shrink: true }}
             />
           </Box>
         </Box>

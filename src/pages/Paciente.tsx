@@ -167,175 +167,198 @@ const Paciente: React.FC = () => {
     );
   }
 
-  const CultivoCard = () => (
-    <Paper
-      sx={{
-        p: { xs: 2, sm: 3 },
-        borderRadius: 2,
-        boxShadow: 2,
-        height: "fit-content",
-      }}
-    >
-      {cultivos ? (
-        <Accordion defaultExpanded>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="panel1-content"
-            id="panel1-header"
+  const CultivoCard = () => {
+    const detalleCultivo = (id: string) => {
+      navigate(`/cultivos/${id}/editar`);
+    };
+    return (
+      <Paper
+        sx={{
+          p: { xs: 2, sm: 3 },
+          borderRadius: 2,
+          boxShadow: 2,
+          height: "fit-content",
+        }}
+      >
+        {cultivos ? (
+          <Accordion
+            defaultExpanded
+            onClick={() => detalleCultivo(cultivos.id)}
           >
-            <ScienceIcon sx={{ mr: 1, color: "primary.main" }} />
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: "bold",
-                color: "primary.main",
-                fontSize: { xs: "1.25rem", sm: "1.5rem" },
-              }}
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="panel1-content"
+              id="panel1-header"
             >
-              Último Cultivo
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography
-              variant="body1"
-              sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
-            >
-              Solicitado: {formatFecha(cultivos.fecha_solicitud)}
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
-            >
-              Recibido:{" "}
-              {cultivos.fecha_recibido ? (
-                formatFecha(cultivos.fecha_recibido)
-              ) : (
-                <Chip
-                  size="small"
-                  label="Pendiente"
-                  color="info"
-                  variant="filled"
-                />
+              <ScienceIcon sx={{ mr: 1, color: "primary.main" }} />
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: "bold",
+                  color: "primary.main",
+                  fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                }}
+              >
+                Último Cultivo
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography
+                variant="body1"
+                sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
+              >
+                Solicitado: {formatFecha(cultivos.fecha_solicitud)}
+              </Typography>
+              {cultivos.nombre && (
+                <Typography
+                  variant="body1"
+                  sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
+                >
+                  Cultivo: {cultivos.nombre}
+                </Typography>
               )}
-            </Typography>
-            {cultivos.resultado && (
               <Typography
                 variant="body1"
                 sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
               >
-                <strong>Resultado:</strong> {cultivos.resultado}
+                Recibido:{" "}
+                {cultivos.fecha_recibido ? (
+                  formatFecha(cultivos.fecha_recibido)
+                ) : (
+                  <Chip
+                    size="small"
+                    label="Pendiente"
+                    color="info"
+                    variant="filled"
+                  />
+                )}
               </Typography>
-            )}
-          </AccordionDetails>
-        </Accordion>
-      ) : (
-        <Box sx={{ textAlign: "center" }}>
-          <ScienceIcon sx={{ fontSize: 48, color: "text.secondary", mb: 2 }} />
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            No hay cultivos
-          </Typography>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Este paciente no tiene cultivos registrados.
-          </Typography>
-        </Box>
-      )}
-      <Button
-        sx={{ mt: 2 }}
-        variant="outlined"
-        color="primary"
-        onClick={() => navigate(`/cultivos?pacienteId=${paciente.id}`)}
-        startIcon={<ScienceIcon />}
-      >
-        Ver Cultivos
-      </Button>
-    </Paper>
-  );
+              {cultivos.resultado && (
+                <Typography
+                  variant="body1"
+                  sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
+                >
+                  <strong>Resultado:</strong> {cultivos.resultado}
+                </Typography>
+              )}
+            </AccordionDetails>
+          </Accordion>
+        ) : (
+          <Box sx={{ textAlign: "center" }}>
+            <ScienceIcon
+              sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+            />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              No hay cultivos
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Este paciente no tiene cultivos registrados.
+            </Typography>
+          </Box>
+        )}
+        <Button
+          sx={{ mt: 2 }}
+          variant="outlined"
+          color="primary"
+          onClick={() => navigate(`/cultivos?pacienteId=${paciente.id}`)}
+          startIcon={<ScienceIcon />}
+        >
+          Ver Cultivos
+        </Button>
+      </Paper>
+    );
+  };
 
-  const PaseCard = () => (
-    <Paper
-      sx={{
-        p: { xs: 2, sm: 3 },
-        borderRadius: 2,
-        boxShadow: 2,
-        height: "fit-content",
-      }}
-    >
-      {pases ? (
-        <Accordion defaultExpanded>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="panel1-content"
-            id="panel1-header"
-          >
-            <AssignmentIcon sx={{ mr: 1, color: "primary.main" }} />
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: "bold",
-                color: "primary.main",
-                fontSize: { xs: "1.25rem", sm: "1.5rem" },
-              }}
-            >
-              Último Pase Médico
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography
-              variant="body1"
-              sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
-            >
-              Fecha: {formatFecha(pases.fecha_creacion)}
-            </Typography>
-            {pases.principal && (
-              <Typography
-                variant="body1"
-                sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
-              >
-                Principal: {pases.principal}
-              </Typography>
-            )}
-            {pases.actualmente && (
-              <Typography
-                variant="body1"
-                sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
-              >
-                Actual: {pases.actualmente}
-              </Typography>
-            )}
-            {pases.pendientes && (
-              <Typography
-                variant="body1"
-                sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
-              >
-                Pendiente: {pases.pendientes}
-              </Typography>
-            )}
-          </AccordionDetails>
-        </Accordion>
-      ) : (
-        <Box sx={{ textAlign: "center" }}>
-          <AssignmentIcon
-            sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
-          />
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            No hay pases médicos
-          </Typography>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Este paciente no tiene pases médicos registrados.
-          </Typography>
-        </Box>
-      )}
-      <Button
-        variant="outlined"
-        color="primary"
-        onClick={() => navigate(`/pases?pacienteId=${paciente.id}`)}
-        startIcon={<AssignmentIcon />}
-        sx={{ mt: 2 }}
+  const PaseCard = () => {
+    const detallePase = (paseId: string) => {
+      navigate(`/pases/${paseId}`);
+    };
+    return (
+      <Paper
+        sx={{
+          p: { xs: 2, sm: 3 },
+          borderRadius: 2,
+          boxShadow: 2,
+          height: "fit-content",
+        }}
       >
-        Ver Pases
-      </Button>
-    </Paper>
-  );
+        {pases ? (
+          <Accordion defaultExpanded onClick={() => detallePase(pases.id)}>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="panel1-content"
+              id="panel1-header"
+            >
+              <AssignmentIcon sx={{ mr: 1, color: "primary.main" }} />
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: "bold",
+                  color: "primary.main",
+                  fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                }}
+              >
+                Último Pase Médico
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography
+                variant="body1"
+                sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
+              >
+                Fecha: {formatFecha(pases.fecha_creacion)}
+              </Typography>
+              {pases.principal && (
+                <Typography
+                  variant="body1"
+                  sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
+                >
+                  Principal: {pases.principal}
+                </Typography>
+              )}
+              {pases.actualmente && (
+                <Typography
+                  variant="body1"
+                  sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
+                >
+                  Actual: {pases.actualmente}
+                </Typography>
+              )}
+              {pases.pendientes && (
+                <Typography
+                  variant="body1"
+                  sx={{ fontSize: { xs: "0.875rem", sm: "1rem" }, mb: 2 }}
+                >
+                  Pendiente: {pases.pendientes}
+                </Typography>
+              )}
+            </AccordionDetails>
+          </Accordion>
+        ) : (
+          <Box sx={{ textAlign: "center" }}>
+            <AssignmentIcon
+              sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+            />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              No hay pases médicos
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Este paciente no tiene pases médicos registrados.
+            </Typography>
+          </Box>
+        )}
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={() => navigate(`/pases?pacienteId=${paciente.id}`)}
+          startIcon={<AssignmentIcon />}
+          sx={{ mt: 2 }}
+        >
+          Ver Pases
+        </Button>
+      </Paper>
+    );
+  };
 
   return (
     <Container
@@ -438,7 +461,7 @@ const Paciente: React.FC = () => {
       </Grid>
 
       {/* Grid con cultivos y pases - Responsive */}
-      <Grid container spacing={{ xs: 2, sm: 3 }}>
+      <Grid container sx={{ mt: 2 }} spacing={{ xs: 2, sm: 3 }}>
         <Grid sx={{ xs: 12, lg: 6 }}>
           <CultivoCard />
         </Grid>

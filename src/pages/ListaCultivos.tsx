@@ -258,6 +258,7 @@ const ListaCultivos: React.FC = () => {
                         transition: "all 0.2s ease-in-out",
                       },
                     }}
+                    onClick={() => editarCultivo(cultivo.id)}
                   >
                     <CardHeader
                       title={
@@ -299,9 +300,7 @@ const ListaCultivos: React.FC = () => {
                           />
                         </Box>
                       }
-                      // ... resto del código
                     />
-                    {/* ... resto del Card */}
                   </Card>
                 </Grid>
               );

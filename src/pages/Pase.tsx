@@ -135,7 +135,7 @@ const Pase = (): ReactNode => {
   };
 
   const handleCancel = () => {
-    navigate("/pases");
+    navigate(-1);
   };
 
   return (
