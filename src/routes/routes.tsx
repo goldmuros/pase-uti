@@ -1,8 +1,7 @@
 import Cultivo from "@/pages/Cultivo";
-import DetalleMedico from "@/pages/DetalleMedico";
 import ListaCultivos from "@/pages/ListaCultivos";
 import ListaMedicos from "@/pages/ListaMedicos";
-import NuevoMedico from "@/pages/NuevoMedico";
+import Medico from "@/pages/Medico";
 import NuevoPaciente from "@/pages/NuevoPaciente";
 import Paciente from "@/pages/Paciente";
 import Pase from "@/pages/Pase";
@@ -31,11 +30,11 @@ const routes = [
           },
           {
             path: "nuevo",
-            element: <NuevoMedico />,
+            element: <Medico />,
           },
           {
             path: ":id",
-            element: <DetalleMedico />,
+            element: <Medico />,
           },
         ],
       },
