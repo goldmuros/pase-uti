@@ -8,14 +8,12 @@ import {
 import {
   Alert,
   Box,
-  Button,
   Card,
   CardHeader,
   Chip,
   Container,
   Fab,
   Grid,
-  Paper,
   Skeleton,
   Tab,
   Tabs,
@@ -88,156 +86,71 @@ const ListaMedicos: React.FC = () => {
   const medicosInactivos = medicos.filter(m => !m.activo);
 
   return (
-    <Container
-      maxWidth="xl"
+    <Box
       sx={{
-        px: { xs: 0.5, sm: 1, md: 2, lg: 3 },
-        position: "relative",
-        width: "100%",
-        maxWidth: "100% !important",
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        overflow: "hidden",
       }}
     >
-      {/* Header - Responsive */}
-      <Box
+      <Container
+        maxWidth="xl"
         sx={{
-          mb: { xs: 2, sm: 3, md: 4 },
+          px: { xs: 0.5, sm: 1, md: 2, lg: 3 },
+          position: "relative",
+          width: "100%",
+          maxWidth: "100% !important",
           display: "flex",
-          alignItems: "center",
-          flexDirection: { xs: "column", sm: "row" },
-          textAlign: { xs: "center", sm: "left" },
+          flexDirection: "column",
+          height: "100%",
+          overflow: "hidden",
         }}
       >
-        <Typography
-          variant={isMobile ? "h5" : "h4"}
+        {/* Header - Responsive */}
+        <Box
           sx={{
-            fontWeight: "bold",
-            color: "primary.main",
-            flexGrow: 1,
-            fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
-            mb: { xs: 1, sm: 0 },
+            mb: { xs: 2, sm: 3, md: 4 },
+            display: "flex",
+            alignItems: "center",
+            flexDirection: { xs: "column", sm: "row" },
+            textAlign: { xs: "center", sm: "left" },
+            flexShrink: 0,
           }}
         >
-          <HospitalIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-          Gestión de Médicos
-        </Typography>
-      </Box>
-
-      {/* Estadísticas rápidas - Responsive */}
-      <Grid
-        container
-        spacing={{ xs: 1, sm: 2 }}
-        sx={{ mb: { xs: 2, sm: 3, md: 4 } }}
-      >
-        <Grid sx={{ xs: 12, sm: 4 }}>
-          <Paper
+          <Typography
+            variant={isMobile ? "h5" : "h4"}
             sx={{
-              p: { xs: 1.5, sm: 2 },
-              textAlign: "center",
-              backgroundColor: "primary.main",
-              color: "white",
-              borderRadius: 2,
+              fontWeight: "bold",
+              color: "primary.main",
+              flexGrow: 1,
+              fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
+              mb: { xs: 1, sm: 0 },
             }}
           >
-            <Typography
-              variant={isMobile ? "h5" : "h4"}
-              sx={{ fontWeight: "bold" }}
-            >
-              {medicosActivos.length}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-            >
-              Médicos Activos
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
-          <Paper
-            sx={{
-              p: { xs: 1.5, sm: 2 },
-              textAlign: "center",
-              backgroundColor: "text.secondary",
-              color: "white",
-              borderRadius: 2,
-            }}
-          >
-            <Typography
-              variant={isMobile ? "h5" : "h4"}
-              sx={{ fontWeight: "bold" }}
-            >
-              {medicosInactivos.length}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-            >
-              Médicos Inactivos
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
-          <Paper
-            sx={{
-              p: { xs: 1.5, sm: 2 },
-              textAlign: "center",
-              backgroundColor: "success.main",
-              color: "white",
-              borderRadius: 2,
-            }}
-          >
-            <Typography
-              variant={isMobile ? "h5" : "h4"}
-              sx={{ fontWeight: "bold" }}
-            >
-              {medicos.length}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-            >
-              Total de Médicos
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      {medicos.length === 0 ? (
-        <Paper sx={{ p: { xs: 3, sm: 4 }, textAlign: "center" }}>
-          <PersonIcon
-            sx={{
-              fontSize: { xs: 48, sm: 64 },
-              color: "text.secondary",
-              mb: 2,
-            }}
-          />
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            No hay médicos registrados
+            <HospitalIcon sx={{ mr: 1, verticalAlign: "middle" }} />
+            Gestión de Médicos
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Comience agregando un nuevo médico al sistema.
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={agregarNuevoMedico}
-            sx={{ borderRadius: 2 }}
-            size={isMobile ? "medium" : "large"}
-          >
-            Agregar Primer Médico
-          </Button>
-        </Paper>
-      ) : (
-        <>
-          <Tabs
-            value={tabValue}
-            onChange={(_event, newValue) => setTabValue(newValue)}
-            sx={{ mb: { xs: 2, sm: 3 } }}
-          >
-            <Tab label={`Activos (${medicosActivos.length})`} />
-            <Tab label={`Inactivos (${medicosInactivos.length})`} />
-          </Tabs>
+        </Box>
 
+        <Tabs
+          value={tabValue}
+          onChange={(_event, newValue) => setTabValue(newValue)}
+          sx={{ mb: { xs: 2, sm: 3 }, flexShrink: 0 }}
+        >
+          <Tab label={`Médicos Activos (${medicosActivos.length})`} />
+          <Tab label={`Médicos Inactivos (${medicosInactivos.length})`} />
+        </Tabs>
+
+        {/* Contenedor con scroll */}
+        <Box
+          sx={{
+            flexGrow: 1,
+            overflow: "auto",
+            pb: 10, // Espacio para el botón flotante
+          }}
+        >
+          {/* Tab 0: Médicos activos */}
           {tabValue === 0 && medicosActivos.length > 0 && (
             <Grid container spacing={{ xs: 2, sm: 3 }}>
               {medicosActivos.map(medico => (
@@ -260,8 +173,19 @@ const ListaMedicos: React.FC = () => {
                   >
                     <CardHeader
                       avatar={
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <PersonIcon color="primary" />
+                        <Box
+                          sx={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            bgcolor: "primary.main",
+                            color: "white",
+                          }}
+                        >
+                          <PersonIcon />
                         </Box>
                       }
                       title={
@@ -308,6 +232,7 @@ const ListaMedicos: React.FC = () => {
             </Grid>
           )}
 
+          {/* Tab 1: Médicos inactivos */}
           {tabValue === 1 && medicosInactivos.length > 0 && (
             <Grid container spacing={{ xs: 2, sm: 3 }}>
               {medicosInactivos.map(medico => (
@@ -378,30 +303,30 @@ const ListaMedicos: React.FC = () => {
               ))}
             </Grid>
           )}
-        </>
-      )}
+        </Box>
 
-      {/* Botón flotante para agregar médico - Responsive */}
-      <Tooltip title="Agregar nuevo médico">
-        <Fab
-          color="primary"
-          aria-label="add"
-          onClick={agregarNuevoMedico}
-          sx={{
-            position: "fixed",
-            bottom: { xs: 16, sm: 24 },
-            right: { xs: 16, sm: 24 },
-            boxShadow: 4,
-            width: { xs: 48, sm: 56 },
-            height: { xs: 48, sm: 56 },
-            zIndex: theme.zIndex.speedDial,
-          }}
-          size={isMobile ? "medium" : "large"}
-        >
-          <AddIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
-        </Fab>
-      </Tooltip>
-    </Container>
+        {/* Botón flotante para agregar médico - Responsive */}
+        <Tooltip title="Agregar nuevo médico">
+          <Fab
+            color="primary"
+            aria-label="add"
+            onClick={agregarNuevoMedico}
+            sx={{
+              position: "fixed",
+              bottom: { xs: 16, sm: 24 },
+              right: { xs: 16, sm: 24 },
+              boxShadow: 4,
+              width: { xs: 48, sm: 56 },
+              height: { xs: 48, sm: 56 },
+              zIndex: theme.zIndex.speedDial,
+            }}
+            size={isMobile ? "medium" : "large"}
+          >
+            <AddIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+          </Fab>
+        </Tooltip>
+      </Container>
+    </Box>
   );
 };
 

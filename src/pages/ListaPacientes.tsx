@@ -266,16 +266,6 @@ const ListaPacientes: React.FC = () => {
                                 {cama.pacientes.nombre}{" "}
                                 {cama.pacientes.apellido}
                               </Typography>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{
-                                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                                }}
-                              >
-                                Ingreso:{" "}
-                                {formatFecha(cama.pacientes.fecha_ingreso)}
-                              </Typography>
                               {cama.pacientes.motivo_ingreso && (
                                 <Typography
                                   variant="body2"
