@@ -293,6 +293,14 @@ const ListaCultivos: React.FC = () => {
                               {`${datosPaciente.nombre} ${datosPaciente.apellido}`}
                             </Typography>
                           </Box>
+                          <Typography variant={isMobile ? "body1" : "h6"}>
+                            Cultivo: {cultivo.nombre}
+                          </Typography>
+                          {cultivo.resultado && (
+                            <Typography variant={isMobile ? "body1" : "h6"}>
+                              Resultado: {cultivo.resultado}
+                            </Typography>
+                          )}
                           <Chip
                             size="small"
                             variant="filled"

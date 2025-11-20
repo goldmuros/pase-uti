@@ -100,15 +100,12 @@ export const useCultivos = (
 
         transformedData = transformedData.filter(cultivo => {
           // Obtener las fechas en formato YYYY-MM-DD
-          const fechaSolicitud = getDateOnly(cultivo.fecha_solicitud);
+          // const fechaSolicitud = getDateOnly(cultivo.fecha_solicitud);
           const fechaRecibido = getDateOnly(cultivo.fecha_recibido);
 
           // Incluir el cultivo si cualquiera de las dos fechas coincide con el filtro
           // O si fecha_recibido es null (pendientes)
-          return (
-            fechaSolicitud === fechaFiltroStr ||
-            fechaRecibido === fechaFiltroStr
-          );
+          return fechaRecibido === null || fechaRecibido === fechaFiltroStr;
         });
       }
 

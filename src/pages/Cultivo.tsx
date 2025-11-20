@@ -5,6 +5,7 @@ import {
 } from "@/hooks/useCultivos";
 import { usePacientes } from "@/hooks/usePacientes";
 import type { Cultivos } from "@/types/Cultivos";
+import { formatDateTimeLocal } from "@/utils/fechas";
 import {
   Alert,
   Box,
@@ -85,18 +86,26 @@ const Cultivo = (): ReactNode => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
+    let fechaRecibido = null;
+
+    if (formCultivo.fecha_recibido) {
+      fechaRecibido = formCultivo.fecha_recibido;
+    } else if (Boolean(formCultivo.resultado)) {
+      fechaRecibido = formatDateTimeLocal(new Date().toString());
+    }
+
     try {
       if (cultivoId) {
         await updateCultivo.mutateAsync({
           id: cultivoId,
           ...formCultivo,
-          fecha_recibido: formCultivo.fecha_recibido || null,
+          fecha_recibido: fechaRecibido,
           activo: true,
         });
       } else {
         await createCultivo.mutateAsync({
           ...formCultivo,
-          fecha_recibido: formCultivo.fecha_recibido || null,
+          fecha_recibido: fechaRecibido,
           activo: true,
         });
       }
