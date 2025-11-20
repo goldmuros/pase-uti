@@ -1,10 +1,13 @@
 import CardPase from "@/components/Pases/CardPase";
 import { usePacientes } from "@/hooks/usePacientes";
 import { usePases } from "@/hooks/usePases";
+import { exportPasesToPDF } from "@/utils/exportPasesToPDF";
+import { formatDateTimeLocal } from "@/utils/fechas";
 import {
   Add as AddIcon,
   ArrowBack as ArrowBackIcon,
   Assignment as AssignmentIcon,
+  Download as DownloadIcon,
 } from "@mui/icons-material";
 import {
   Box,
@@ -22,71 +25,6 @@ import {
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-// Hook personalizado para obtener pases agrupados por paciente
-// const usePasesAgrupadosData = (pacientes: Paciente[] | undefined) => {
-//   const {
-//     data: pases,
-//     isLoading: isLoadingPases,
-//     error: errorPases,
-//   } = usePases();
-
-//   const isLoading = isLoadingPases;
-//   const error = errorPases;
-
-//   if (isLoading || error || !pases || !pacientes) {
-//     return {
-//       pasesPorPaciente: [],
-//       isLoading,
-//       error: error ? `Error al cargar los datos: ${error.message}` : null,
-//     };
-//   }
-
-//   // Agrupar pases por paciente
-//   const pasesAgrupados: { [pacienteId: string]: PaseType[] } = {};
-
-//   pases.forEach((pase: PaseType) => {
-//     if (!pasesAgrupados[pase.paciente_id]) {
-//       pasesAgrupados[pase.paciente_id] = [];
-//     }
-//     pasesAgrupados[pase.paciente_id].push(pase);
-//   });
-
-//   // Crear estructura final con información del paciente
-//   const pasesPorPaciente: PasesPorPaciente[] = Object.entries(pasesAgrupados)
-//     .map(([pacienteId, pasesList]) => {
-//       const paciente = pacientes.find(p => p.id === pacienteId);
-//       if (!paciente) return null;
-
-//       // Ordenar pases por fecha descendente
-//       const pasesOrdenados = pasesList.sort(
-//         (a, b) =>
-//           new Date(b.fecha_creacion).getTime() -
-//           new Date(a.fecha_creacion).getTime()
-//       );
-
-//       return {
-//         paciente,
-//         pases: pasesOrdenados,
-//         ultimoPase: pasesOrdenados[0],
-//         pasesAnteriores: pasesOrdenados.slice(1),
-//       };
-//     })
-//     .filter(Boolean) as PasesPorPaciente[];
-
-//   // Ordenar por fecha del último pase (más reciente primero)
-//   const pasesPorPacienteOrdenados = pasesPorPaciente.sort(
-//     (a, b) =>
-//       new Date(b.ultimoPase.fecha_creacion).getTime() -
-//       new Date(a.ultimoPase.fecha_creacion).getTime()
-//   );
-
-//   return {
-//     pasesPorPaciente: pasesPorPacienteOrdenados,
-//     isLoading: false,
-//     error: null,
-//   };
-// };
 
 // Componente principal
 const ListaPases: React.FC = () => {
@@ -110,6 +48,16 @@ const ListaPases: React.FC = () => {
     navigate(-1);
   };
 
+  const handleDescargarPDF = () => {
+    if (pases && pases.length > 0 && fechaFiltro && pacientes) {
+      exportPasesToPDF({
+        pases,
+        pacientes,
+        fecha: formatDateTimeLocal(fechaFiltro.toString()),
+      });
+    }
+  };
+
   return (
     <Container
       maxWidth="xl"
@@ -129,30 +77,47 @@ const ListaPases: React.FC = () => {
           alignItems: "center",
           flexDirection: { xs: "column", sm: "row" },
           textAlign: { xs: "center", sm: "left" },
+          justifyContent: "space-between",
         }}
       >
-        <Tooltip title="Volver atrás">
-          <IconButton
-            onClick={handleGoBack}
-            sx={{ mr: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }}
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Tooltip title="Volver atrás">
+            <IconButton
+              onClick={handleGoBack}
+              sx={{ mr: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+          </Tooltip>
+          <Typography
+            variant={isMobile ? "h5" : "h4"}
+            sx={{
+              fontWeight: "bold",
+              color: "primary.main",
+              fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
+            }}
           >
-            <ArrowBackIcon />
-          </IconButton>
-        </Tooltip>
-        <Typography
-          variant={isMobile ? "h5" : "h4"}
-          sx={{
-            fontWeight: "bold",
-            color: "primary.main",
-            flexGrow: 1,
-            fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
-          }}
-        >
-          <AssignmentIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-          {pacienteId && pacienteFiltrado
-            ? `Pases Médicos de ${pacienteFiltrado.nombre} ${pacienteFiltrado.apellido}`
-            : "Pases Médicos por Paciente"}
-        </Typography>
+            <AssignmentIcon sx={{ mr: 1, verticalAlign: "middle" }} />
+            {pacienteId && pacienteFiltrado
+              ? `Pases Médicos de ${pacienteFiltrado.nombre} ${pacienteFiltrado.apellido}`
+              : "Pases Médicos por Paciente"}
+          </Typography>
+        </Box>
+
+        {/* Botón para descargar PDF */}
+        {pases && pases.length > 0 && (
+          <Tooltip title="Descargar PDF">
+            <Button
+              variant="contained"
+              startIcon={<DownloadIcon />}
+              onClick={handleDescargarPDF}
+              sx={{ borderRadius: 2, mt: { xs: 2, sm: 0 } }}
+              size={isMobile ? "small" : "medium"}
+            >
+              Descargar PDF
+            </Button>
+          </Tooltip>
+        )}
       </Box>
 
       {/* Filtro de fecha */}
