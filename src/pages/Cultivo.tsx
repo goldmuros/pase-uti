@@ -40,7 +40,7 @@ const DEFAULT_CULTIVO = {
   fecha_recibido: "",
   nombre: "",
   resultado: "",
-  estado: "pendiente",
+  estado: "",
 };
 
 const Cultivo = (): ReactNode => {
@@ -55,6 +55,8 @@ const Cultivo = (): ReactNode => {
 
   const [formCultivo, setFormCultivo] =
     useState<Omit<Cultivos, "id" | "created_at" | "activo">>(DEFAULT_CULTIVO);
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleCancel = () => {
     navigate(-1);
@@ -81,10 +83,53 @@ const Cultivo = (): ReactNode => {
         ...prev,
         [field]: event.target.value,
       }));
+      // Limpiar error del campo cuando el usuario edita
+      if (errors[field]) {
+        setErrors(prev => ({ ...prev, [field]: "" }));
+      }
     };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Validación: Paciente requerido
+    if (!formCultivo.paciente_id.trim()) {
+      newErrors.paciente_id = "El paciente es requerido";
+    }
+
+    // Validación: Nombre del cultivo requerido
+    if (!formCultivo.nombre.trim()) {
+      newErrors.nombre = "El nombre del cultivo es requerido";
+    }
+
+    // Validación: Fecha de solicitud requerida
+    if (!formCultivo.fecha_solicitud.trim()) {
+      newErrors.fecha_solicitud = "La fecha de solicitud es requerida";
+    }
+
+    // Validación: Si hay resultado, debe haber fecha_recibido
+    if (formCultivo.resultado.trim() && !formCultivo.fecha_recibido?.trim()) {
+      newErrors.fecha_recibido =
+        "Debe ingresar la fecha de recibido si hay un resultado";
+    }
+
+    // Validación: Si hay resultado, debe haber estado
+    if (formCultivo.resultado.trim() && !formCultivo.estado.trim()) {
+      newErrors.estado =
+        "Debe seleccionar un estado (Positivo o Negativo) si hay un resultado";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    // Validar formulario
+    if (!validateForm()) {
+      return;
+    }
 
     let fechaRecibido = null;
 
@@ -100,12 +145,14 @@ const Cultivo = (): ReactNode => {
           id: cultivoId,
           ...formCultivo,
           fecha_recibido: fechaRecibido,
+          estado: fechaRecibido ? formCultivo.estado : "pendiente",
           activo: true,
         });
       } else {
         await createCultivo.mutateAsync({
           ...formCultivo,
           fecha_recibido: fechaRecibido,
+          estado: fechaRecibido ? formCultivo.estado : "pendiente",
           activo: true,
         });
       }
@@ -132,18 +179,27 @@ const Cultivo = (): ReactNode => {
         </Alert>
       )}
 
+      {updateCultivo.isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error al actualizar el cultivo: {updateCultivo.error?.message}
+        </Alert>
+      )}
+
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
         <Box sx={{ mb: 3 }}>
-          <FormControl fullWidth required>
+          <FormControl fullWidth required error={!!errors.paciente_id}>
             <InputLabel>Paciente</InputLabel>
             <Select
               value={formCultivo.paciente_id}
-              onChange={event =>
+              onChange={event => {
                 setFormCultivo(prev => ({
                   ...prev,
                   paciente_id: event.target.value,
-                }))
-              }
+                }));
+                if (errors.paciente_id) {
+                  setErrors(prev => ({ ...prev, paciente_id: "" }));
+                }
+              }}
               label="Paciente"
             >
               {pacientes?.map(paciente => (
@@ -152,20 +208,28 @@ const Cultivo = (): ReactNode => {
                 </MenuItem>
               ))}
             </Select>
+            {errors.paciente_id && (
+              <Typography variant="caption" color="error">
+                {errors.paciente_id}
+              </Typography>
+            )}
           </FormControl>
         </Box>
 
         <Box sx={{ mb: 3 }}>
-          <FormControl fullWidth required>
+          <FormControl fullWidth required error={!!errors.nombre}>
             <InputLabel>Nombre del Cultivo</InputLabel>
             <Select
               value={formCultivo.nombre}
-              onChange={event =>
+              onChange={event => {
                 setFormCultivo(prev => ({
                   ...prev,
                   nombre: event.target.value,
-                }))
-              }
+                }));
+                if (errors.nombre) {
+                  setErrors(prev => ({ ...prev, nombre: "" }));
+                }
+              }}
               label="Nombre del Cultivo"
             >
               {CULTIVOS.map(cultivo => (
@@ -174,8 +238,14 @@ const Cultivo = (): ReactNode => {
                 </MenuItem>
               ))}
             </Select>
+            {errors.nombre && (
+              <Typography variant="caption" color="error">
+                {errors.nombre}
+              </Typography>
+            )}
           </FormControl>
         </Box>
+
         <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
           <Box sx={{ flex: 1, minWidth: 250 }}>
             <TextField
@@ -185,6 +255,8 @@ const Cultivo = (): ReactNode => {
               value={formCultivo.fecha_solicitud}
               onChange={handleChange("fecha_solicitud")}
               required
+              error={!!errors.fecha_solicitud}
+              helperText={errors.fecha_solicitud}
               InputLabelProps={{ shrink: true }}
             />
           </Box>
@@ -196,11 +268,15 @@ const Cultivo = (): ReactNode => {
               type="date"
               value={formCultivo.fecha_recibido}
               onChange={handleChange("fecha_recibido")}
-              helperText="Opcional - dejar vacío si aún no se ha recibido"
+              error={!!errors.fecha_recibido}
+              helperText={
+                errors.fecha_recibido || "Requerida si ingresa un resultado"
+              }
               InputLabelProps={{ shrink: true }}
             />
           </Box>
         </Box>
+
         <Box sx={{ mb: 3 }}>
           <TextField
             fullWidth
@@ -210,11 +286,13 @@ const Cultivo = (): ReactNode => {
             multiline
             rows={4}
             placeholder="Describa el resultado del cultivo..."
+            helperText="Si ingresa un resultado, debe proporcionar la fecha de recibido"
           />
         </Box>
+
         {mostrarEstado && (
           <Box sx={{ mb: 3 }}>
-            <FormControl>
+            <FormControl error={!!errors.estado}>
               <FormLabel>Estado</FormLabel>
               <RadioGroup
                 aria-labelledby="estado"
@@ -234,19 +312,33 @@ const Cultivo = (): ReactNode => {
                   value="negativo"
                 />
               </RadioGroup>
+              {errors.estado && (
+                <Typography variant="caption" color="error">
+                  {errors.estado}
+                </Typography>
+              )}
             </FormControl>
           </Box>
         )}
+
         <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
           <Button
             type="submit"
             variant="contained"
             color="primary"
-            disabled={createCultivo.isPending}
+            disabled={createCultivo.isPending || updateCultivo.isPending}
           >
-            {cultivoId ? "Modificar cultivo" : "Crear cultivo"}
+            {createCultivo.isPending || updateCultivo.isPending
+              ? "Guardando..."
+              : cultivoId
+                ? "Modificar cultivo"
+                : "Crear cultivo"}
           </Button>
-          <Button variant="outlined" onClick={handleCancel}>
+          <Button
+            variant="outlined"
+            onClick={handleCancel}
+            disabled={createCultivo.isPending || updateCultivo.isPending}
+          >
             Cancelar
           </Button>
         </Box>

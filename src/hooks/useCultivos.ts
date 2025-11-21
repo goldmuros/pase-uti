@@ -66,6 +66,15 @@ const getDateOnly = (dateString: string | null): string | null => {
   return dateString.split("T")[0];
 };
 
+// Función auxiliar para calcular la diferencia de días entre dos fechas
+const getDaysDifference = (date1: string, date2: string): number => {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  const diffTime = Math.abs(d2.getTime() - d1.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+};
+
 // Get all cultivos
 export const useCultivos = (
   fechaFiltro: Date | null,
@@ -103,9 +112,25 @@ export const useCultivos = (
           // const fechaSolicitud = getDateOnly(cultivo.fecha_solicitud);
           const fechaRecibido = getDateOnly(cultivo.fecha_recibido);
 
-          // Incluir el cultivo si cualquiera de las dos fechas coincide con el filtro
-          // O si fecha_recibido es null (pendientes)
-          return fechaRecibido === null || fechaRecibido === fechaFiltroStr;
+          // Condición 1: Si fecha_recibido es null, incluir
+          if (fechaRecibido === null) {
+            return true;
+          }
+
+          // Condición 2: Si fecha_recibido es igual a la fecha de filtro
+          if (fechaRecibido === fechaFiltroStr) {
+            return true;
+          }
+
+          // Condición 3: Si fecha_recibido es hasta 5 días menor que la fecha de filtro
+          if (fechaFiltroStr) {
+            const daysDiff = getDaysDifference(fechaRecibido, fechaFiltroStr);
+            if (daysDiff <= 5 && fechaRecibido < fechaFiltroStr) {
+              return true;
+            }
+          }
+
+          return false;
         });
       }
 
