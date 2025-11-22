@@ -15,3 +15,10 @@ export const formatFecha = (fecha: string) => {
     day: "numeric",
   });
 };
+
+// Función auxiliar para obtener solo la parte de fecha (YYYY-MM-DD) de un timestamp
+export const getDateOnly = (dateString: string | null): string | null => {
+  if (!dateString) return null;
+  // Extraer solo YYYY-MM-DD
+  return dateString.split("T")[0];
+};

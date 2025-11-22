@@ -6,7 +6,6 @@ import {
   Assignment as AssignmentIcon,
   Bed as BedIcon,
   CheckCircle as CheckCircleIcon,
-  LocalHospital as HospitalIcon,
   Person as PersonIcon,
   Science as ScienceIcon,
 } from "@mui/icons-material";
@@ -67,8 +66,8 @@ const ListaPacientes: React.FC = () => {
     navigate(`/cultivos/nuevo?pacienteId=${pacienteId}`);
   };
 
-  const agregarNuevoPaciente = () => {
-    navigate("/pacientes/nuevo");
+  const agregarNuevoPaciente = (id: string | undefined) => {
+    navigate(`/pacientes/nuevo?camaId=${id}`);
   };
 
   // Estados de carga
@@ -114,27 +113,24 @@ const ListaPacientes: React.FC = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        height: "100vh",
+        height: "100%",
         overflow: "hidden",
       }}
     >
       <Container
         maxWidth="xl"
         sx={{
-          px: { xs: 0.5, sm: 1, md: 2, lg: 3 },
           position: "relative",
           width: "100%",
           maxWidth: "100% !important",
           display: "flex",
           flexDirection: "column",
-          height: "100%",
           overflow: "hidden",
         }}
       >
         {/* Header - Responsive */}
         <Box
           sx={{
-            mb: { xs: 2, sm: 3, md: 4 },
             display: "flex",
             alignItems: "center",
             flexDirection: { xs: "column", sm: "row" },
@@ -143,16 +139,15 @@ const ListaPacientes: React.FC = () => {
           }}
         >
           <Typography
-            variant={isMobile ? "h5" : "h4"}
+            variant="h4"
             sx={{
               fontWeight: "bold",
               color: "primary.main",
               flexGrow: 1,
-              fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
+              fontSize: { xs: "1.5rem", sm: "2rem", md: "2rem" },
               mb: { xs: 1, sm: 0 },
             }}
           >
-            <HospitalIcon sx={{ mr: 1, verticalAlign: "middle" }} />
             Gestión de Camas y Pacientes
           </Typography>
         </Box>
@@ -160,7 +155,7 @@ const ListaPacientes: React.FC = () => {
         <Tabs
           value={tabValue}
           onChange={(_event, newValue) => setTabValue(newValue)}
-          sx={{ mb: { xs: 2, sm: 3 }, flexShrink: 0 }}
+          sx={{ flexShrink: 0 }}
         >
           <Tab label={`Vista de Camas (${camas?.length || 0})`} />
           <Tab label={`Pacientes Inactivos (${pacientesInactivos.length})`} />
@@ -181,7 +176,7 @@ const ListaPacientes: React.FC = () => {
                 const estaOcupada = !cama.disponible;
 
                 return (
-                  <Grid sx={{ xs: 12, sm: 6, lg: 4 }} key={cama.id}>
+                  <Grid sx={{ xs: 12, sm: 12, md: 4 }} key={cama.id}>
                     <Card
                       elevation={2}
                       sx={{
@@ -197,13 +192,11 @@ const ListaPacientes: React.FC = () => {
                         borderColor: estaOcupada
                           ? "transparent"
                           : "success.main",
-                        "&:hover": estaOcupada
-                          ? {
-                              boxShadow: 4,
-                              transform: "translateY(-2px)",
-                              transition: "all 0.2s ease-in-out",
-                            }
-                          : {},
+                        "&:hover": {
+                          boxShadow: 4,
+                          transform: "translateY(2px)",
+                          transition: "all 0.2s ease-in-out",
+                        },
                       }}
                       onClick={() =>
                         estaOcupada && irDetallePaciente(cama.pacientes.id)
@@ -254,7 +247,7 @@ const ListaPacientes: React.FC = () => {
                         }
                         subheader={
                           estaOcupada ? (
-                            <Box>
+                            <Box sx={{ minHeight: 50 }}>
                               <Typography
                                 variant="body1"
                                 sx={{
@@ -273,6 +266,11 @@ const ListaPacientes: React.FC = () => {
                                   sx={{
                                     fontSize: { xs: "0.75rem", sm: "0.875rem" },
                                     mt: 0.5,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    display: "-webkit-box",
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: "vertical",
                                   }}
                                 >
                                   Motivo: {cama.pacientes.motivo_ingreso}
@@ -280,46 +278,71 @@ const ListaPacientes: React.FC = () => {
                               )}
                             </Box>
                           ) : (
-                            <Typography
-                              variant="body2"
-                              color="success.dark"
-                              sx={{
-                                fontSize: { xs: "0.875rem", sm: "1rem" },
-                                fontWeight: "medium",
-                              }}
-                            >
-                              Cama lista para asignar
-                            </Typography>
+                            <Box sx={{ minHeight: 50 }}>
+                              <Typography
+                                variant="body2"
+                                color="success.dark"
+                                sx={{
+                                  fontSize: { xs: "0.875rem", sm: "1rem" },
+                                  fontWeight: "medium",
+                                }}
+                              >
+                                Cama lista para asignar
+                              </Typography>
+                            </Box>
                           )
                         }
                         sx={{ flexGrow: 1, pb: 1 }}
                       />
-                      {estaOcupada && (
-                        <CardActions
-                          sx={{
-                            justifyContent: "space-between",
-                            px: 2,
-                            pb: 2,
-                            flexDirection: { xs: "column", sm: "row" },
-                            gap: { xs: 1, sm: 0 },
-                          }}
-                        >
-                          <Button
-                            size="small"
-                            color="primary"
-                            startIcon={<AssignmentIcon />}
-                            onClick={event => {
-                              event.stopPropagation();
-                              agregarPase(cama.pacientes.id);
-                            }}
-                            sx={{
-                              borderRadius: 2,
-                              width: { xs: "100%", sm: "auto" },
-                              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                            }}
-                          >
-                            Agregar Pase
-                          </Button>
+
+                      <CardActions
+                        sx={{
+                          justifyContent: "space-between",
+                          px: 2,
+                          pb: 2,
+                          flexDirection: { xs: "column", sm: "row" },
+                          gap: { xs: 1, sm: 0 },
+                          mt: "auto",
+                        }}
+                      >
+                        {estaOcupada && (
+                          <>
+                            <Button
+                              size="small"
+                              color="primary"
+                              startIcon={<AssignmentIcon />}
+                              onClick={event => {
+                                event.stopPropagation();
+                                agregarPase(cama.pacientes.id);
+                              }}
+                              sx={{
+                                borderRadius: 2,
+                                width: { xs: "100%", sm: "auto" },
+                                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                              }}
+                            >
+                              Agregar Pase
+                            </Button>
+                            <Button
+                              size="small"
+                              color="primary"
+                              variant="outlined"
+                              startIcon={<ScienceIcon />}
+                              onClick={event => {
+                                event.stopPropagation();
+                                agregarCultivos(cama.pacientes.id);
+                              }}
+                              sx={{
+                                borderRadius: 2,
+                                width: { xs: "100%", sm: "auto" },
+                                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                              }}
+                            >
+                              Agregar Cultivo
+                            </Button>
+                          </>
+                        )}
+                        {!estaOcupada && (
                           <Button
                             size="small"
                             color="primary"
@@ -327,7 +350,7 @@ const ListaPacientes: React.FC = () => {
                             startIcon={<ScienceIcon />}
                             onClick={event => {
                               event.stopPropagation();
-                              agregarCultivos(cama.pacientes.id);
+                              agregarNuevoPaciente(cama.id);
                             }}
                             sx={{
                               borderRadius: 2,
@@ -335,10 +358,10 @@ const ListaPacientes: React.FC = () => {
                               fontSize: { xs: "0.75rem", sm: "0.875rem" },
                             }}
                           >
-                            Agregar Cultivo
+                            Agregar Paciente
                           </Button>
-                        </CardActions>
-                      )}
+                        )}
+                      </CardActions>
                     </Card>
                   </Grid>
                 );
@@ -424,7 +447,7 @@ const ListaPacientes: React.FC = () => {
           <Fab
             color="primary"
             aria-label="add"
-            onClick={agregarNuevoPaciente}
+            onClick={() => agregarNuevoPaciente(undefined)}
             sx={{
               position: "fixed",
               bottom: { xs: 16, sm: 24 },

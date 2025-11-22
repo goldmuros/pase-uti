@@ -20,12 +20,15 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Paciente } from "../types/Paciente";
 
 const NuevoPaciente = (): ReactNode => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
   const createPaciente = useCreatePaciente();
+  const camaIdFromUrl = searchParams.get("camaId");
 
   const { data: camas = [] } = useCamas();
 
@@ -34,7 +37,8 @@ const NuevoPaciente = (): ReactNode => {
   >({
     nombre: "",
     apellido: "",
-    cama_id: null,
+    cama_id: camaIdFromUrl || null,
+    motivo_alta: "",
     motivo_ingreso: "",
     activo: true,
     fecha_ingreso: new Date().toISOString().split("T")[0], // YYYY-MM-DD

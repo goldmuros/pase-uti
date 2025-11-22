@@ -1,4 +1,4 @@
-import { formatDateTimeLocal } from "@/utils/fechas";
+import { formatDateTimeLocal, getDateOnly } from "@/utils/fechas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../config/supabase";
 import type { Cultivos, CultivosPaciente } from "../types/Cultivos";
@@ -57,13 +57,6 @@ export const useGetCultivosPorPaciente = (pacienteId?: string) => {
     },
     enabled: Boolean(pacienteId),
   });
-};
-
-// Función auxiliar para obtener solo la parte de fecha (YYYY-MM-DD) de un timestamp
-const getDateOnly = (dateString: string | null): string | null => {
-  if (!dateString) return null;
-  // Extraer solo YYYY-MM-DD
-  return dateString.split("T")[0];
 };
 
 // Función auxiliar para calcular la diferencia de días entre dos fechas
